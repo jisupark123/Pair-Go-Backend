@@ -23,7 +23,7 @@ export class UsersService {
       data: {
         socialId: details.socialId!,
         authProvider: details.authProvider!,
-        nickname: details.nickname,
+        nickname: details.nickname!,
         email: details.email,
       },
     });

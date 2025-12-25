@@ -82,6 +82,10 @@ export class AuthService {
     const email = kakaoAccount?.email;
     const authProvider = AuthProvider.kakao;
 
+    if (!nickname) {
+      throw new BadRequestException('Nickname is required from Kakao');
+    }
+
     let user = await this.usersService.findBySocialId(socialId, authProvider);
 
     if (!user) {

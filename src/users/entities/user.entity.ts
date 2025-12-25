@@ -6,7 +6,7 @@ export class User implements PrismaUser {
   id: number;
 
   @ApiProperty({ example: 'JohnDoe', description: 'The nickname of the user', nullable: true })
-  nickname: string | null;
+  nickname: string;
 
   @ApiProperty({ example: 'john@example.com', description: 'The email of the user', nullable: true })
   email: string | null;

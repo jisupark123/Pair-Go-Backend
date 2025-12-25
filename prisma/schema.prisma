@@ -16,7 +16,7 @@ enum AuthProvider {
 
 model User {
   id           Int          @id @default(autoincrement())
-  nickname     String?
+  nickname     String
   email        String?
   socialId     String       @map("social_id")
   authProvider AuthProvider @map("auth_provider")
