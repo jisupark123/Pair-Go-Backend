@@ -1,4 +1,4 @@
-import { Controller, Get, Query, Res } from '@nestjs/common';
+import { Controller, Get, Post, Query, Res } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import type { Response } from 'express';
 
@@ -23,5 +23,19 @@ export class AuthController {
     });
 
     return res.redirect(frontendRedirectUri);
+  }
+
+  @Post('logout')
+  @ApiOperation({ summary: 'Logout' })
+  @ApiResponse({ status: 200, description: 'User logged out successfully' })
+  async logout(@Res() res: Response) {
+    res.clearCookie('accessToken', {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      path: '/',
+    });
+
+    return res.status(200).json({ message: 'Logged out successfully' });
   }
 }
