@@ -78,21 +78,15 @@ export class AuthService {
     // 3. Find or Create User
     const socialId = userInfo.id.toString();
     const kakaoAccount = userInfo.kakao_account;
-    const nickname = kakaoAccount?.profile?.nickname;
     const email = kakaoAccount?.email;
     const authProvider = AuthProvider.kakao;
-
-    if (!nickname) {
-      throw new BadRequestException('Nickname is required from Kakao');
-    }
 
     let user = await this.usersService.findBySocialId(socialId, authProvider);
 
     if (!user) {
-      user = await this.usersService.create({
+      user = await this.usersService.createWithRandomNickname({
         socialId,
         authProvider,
-        nickname,
         email,
       });
     }

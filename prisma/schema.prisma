@@ -16,12 +16,15 @@ enum AuthProvider {
 
 model User {
   id           Int          @id @default(autoincrement())
-  nickname     String
+  nickname     String       @unique
   email        String?
   socialId     String       @map("social_id")
   authProvider AuthProvider @map("auth_provider")
   createdAt    DateTime     @default(now()) @map("created_at")
   updatedAt    DateTime     @updatedAt @map("updated_at")
+
+  friends  User[] @relation("UserFriends")
+  friendOf User[] @relation("UserFriends")
 
   @@unique([socialId, authProvider])
   @@map("users")

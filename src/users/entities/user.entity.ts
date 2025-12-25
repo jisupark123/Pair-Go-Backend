@@ -22,4 +22,7 @@ export class User implements PrismaUser {
 
   @ApiProperty({ description: 'The date and time when the user was last updated' })
   updatedAt: Date;
+
+  @ApiProperty({ type: () => [User], description: 'The friends of the user', required: false })
+  friends?: User[];
 }
