@@ -83,4 +83,28 @@ export class UsersService {
       },
     });
   }
+
+  /**
+   * 사용자의 닉네임을 변경합니다.
+   * 이미 존재하는 닉네임일 경우 예외를 발생시킵니다.
+   *
+   * @param id 사용자 ID
+   * @param nickname 변경할 새 닉네임
+   * @returns 업데이트된 사용자 객체
+   * @throws BadRequestException 이미 존재하는 닉네임일 경우
+   */
+  async updateNickname(id: number, nickname: string): Promise<User> {
+    const existingUser = await this.prisma.user.findUnique({
+      where: { nickname },
+    });
+
+    if (existingUser) {
+      throw new BadRequestException('이미 존재하는 닉네임입니다.');
+    }
+
+    return this.prisma.user.update({
+      where: { id },
+      data: { nickname },
+    });
+  }
 }
