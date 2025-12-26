@@ -1,6 +1,6 @@
-import { Controller, Get, Patch, Body, UseGuards } from '@nestjs/common';
+import { Controller, Get, Patch, Body, UseGuards, Query, BadRequestException, NotFoundException } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
-import { ApiCookieAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { ApiCookieAuth, ApiOperation, ApiResponse, ApiTags, ApiQuery } from '@nestjs/swagger';
 import type { User } from '@prisma/client';
 
 import { CurrentUser } from '@/common/decorators/user.decorator';
@@ -29,5 +29,23 @@ export class UsersController {
   @ApiResponse({ status: 200, type: UserEntity })
   async updateNickname(@CurrentUser() user: User, @Body() dto: UpdateNicknameDto) {
     return this.usersService.updateNickname(user.id, dto.nickname);
+  }
+
+  @Get()
+  @UseGuards(AuthGuard('jwt'))
+  @ApiCookieAuth()
+  @ApiOperation({ summary: 'Search user by nickname' })
+  @ApiQuery({ name: 'nickname', required: true, description: 'Nickname to search for' })
+  @ApiResponse({ status: 200, type: UserEntity })
+  @ApiResponse({ status: 404, description: 'User not found' })
+  async findUserByNickname(@Query('nickname') nickname: string) {
+    if (!nickname) {
+      throw new BadRequestException('Nickname query parameter is required');
+    }
+    const user = await this.usersService.findByNickname(nickname);
+    if (!user) {
+      throw new NotFoundException('존재하지 않는 사용자입니다.');
+    }
+    return user;
   }
 }

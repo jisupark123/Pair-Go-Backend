@@ -107,4 +107,16 @@ export class UsersService {
       data: { nickname },
     });
   }
+
+  /**
+   * 닉네임으로 사용자를 조회합니다.
+   *
+   * @param nickname 조회할 닉네임
+   * @returns 사용자 객체 또는 null
+   */
+  async findByNickname(nickname: string): Promise<User | null> {
+    return this.prisma.user.findUnique({
+      where: { nickname },
+    });
+  }
 }
