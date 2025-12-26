@@ -4,6 +4,7 @@ import { ApiCookieAuth, ApiOperation, ApiResponse, ApiTags, ApiQuery } from '@ne
 import type { User } from '@prisma/client';
 
 import { CurrentUser } from '@/common/decorators/user.decorator';
+import { PublicUserDto } from '@/users/dto/public-user.dto';
 import { UpdateNicknameDto } from '@/users/dto/update-nickname.dto';
 import { User as UserEntity } from '@/users/entities/user.entity';
 import { UsersService } from '@/users/users.service';
@@ -32,11 +33,9 @@ export class UsersController {
   }
 
   @Get()
-  @UseGuards(AuthGuard('jwt'))
-  @ApiCookieAuth()
-  @ApiOperation({ summary: 'Search user by nickname' })
+  @ApiOperation({ summary: 'Search user by nickname (Public)' })
   @ApiQuery({ name: 'nickname', required: true, description: 'Nickname to search for' })
-  @ApiResponse({ status: 200, type: UserEntity })
+  @ApiResponse({ status: 200, type: PublicUserDto })
   @ApiResponse({ status: 404, description: 'User not found' })
   async findUserByNickname(@Query('nickname') nickname: string) {
     if (!nickname) {
@@ -46,6 +45,6 @@ export class UsersController {
     if (!user) {
       throw new NotFoundException('존재하지 않는 사용자입니다.');
     }
-    return user;
+    return new PublicUserDto(user);
   }
 }
