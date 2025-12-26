@@ -168,6 +168,24 @@ export class RoomsGateway implements OnGatewayInit, OnGatewayConnection, OnGatew
     }
   }
 
+  @SubscribeMessage('changeTeam')
+  handleChangeTeam(client: AuthenticatedSocket, payload: { roomId: string; targetUserId: number }) {
+    const { user } = client.data;
+    if (!user) {
+      throw new WsException('Unauthorized');
+    }
+
+    try {
+      const { roomId, targetUserId } = payload;
+      const updatedRoom = this.roomsService.changeTeam(roomId, user.id, targetUserId);
+
+      this.server.to(roomId).emit('roomUpdate', updatedRoom);
+      return { success: true };
+    } catch (error) {
+      throw new WsException(error.message);
+    }
+  }
+
   private parseCookie(cookieString: string, key: string): string | null {
     const match = cookieString.match(new RegExp('(^| )' + key + '=([^;]+)'));
     if (match) return match[2];

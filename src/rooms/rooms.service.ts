@@ -109,4 +109,23 @@ export class RoomsService {
     room.settings = settings;
     return room;
   }
+
+  changeTeam(roomId: string, initiatorId: number, targetPlayerId: number) {
+    const room = this.getRoom(roomId);
+    const targetPlayer = room.players.find((p) => p.id === targetPlayerId);
+
+    if (!targetPlayer) {
+      throw new NotFoundException('해당 유저를 찾을 수 없습니다.');
+    }
+
+    // 권한 체크: 본인이거나 방장이어야 함
+    if (initiatorId !== targetPlayerId && room.hostId !== initiatorId) {
+      throw new Error('권한이 없습니다.');
+    }
+
+    // 팀 변경 (토글)
+    targetPlayer.team = targetPlayer.team === 'red' ? 'blue' : 'red';
+
+    return room;
+  }
 }
