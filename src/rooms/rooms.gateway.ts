@@ -37,6 +37,10 @@ export class RoomsGateway implements OnGatewayInit, OnGatewayConnection, OnGatew
   afterInit(server: Server) {
     server.use(async (socket, next) => {
       try {
+        // 0. User-Agent 파싱 및 기기 정보 저장
+        const userAgent = socket.handshake.headers['user-agent'] || '';
+        socket.data.deviceType = this.getDeviceType(userAgent);
+
         // 1. 쿠키에서 토큰 추출
         // Socket.IO 미들웨어에서는 socket.request.headers.cookie를 참조하거나 handshake를 사용할 수 있음
         const cookies = socket.handshake.headers.cookie;
@@ -66,7 +70,7 @@ export class RoomsGateway implements OnGatewayInit, OnGatewayConnection, OnGatew
   handleConnection(client: AuthenticatedSocket) {
     const { user } = client.data;
     if (user) {
-      this.logger.log(`Client connected: ${client.id}, User: ${user.nickname}`);
+      this.logger.log(`Client connected: ${client.id}, User: ${user.nickname}, Device: ${client.data.deviceType}`);
     } else {
       // 미들웨어를 통과했으나 유저 정보가 없는 경우 (이론상 발생하지 않음)
       this.logger.warn(`Client connected without user data: ${client.id}`);
@@ -78,7 +82,7 @@ export class RoomsGateway implements OnGatewayInit, OnGatewayConnection, OnGatew
     this.logger.log(`Client disconnected: ${client.id}`);
 
     // 유저가 접속해 있던 방이 있다면 제거 및 브로드캐스트
-    const { roomId } = client.data;
+    const roomId = client.data['roomId'] as string | undefined;
     if (roomId) {
       const updatedRoom = this.roomsService.removePlayerFromRoom(roomId, client.id);
       if (updatedRoom) {
@@ -93,7 +97,8 @@ export class RoomsGateway implements OnGatewayInit, OnGatewayConnection, OnGatew
   // 대기실 입장
   @SubscribeMessage('joinRoom')
   handleJoinRoom(client: AuthenticatedSocket, payload: { roomId: string }) {
-    const { user } = client.data;
+    this.logger.log(`User ${client.data.user?.nickname} tried to join room ${payload.roomId}`);
+    const { user, deviceType } = client.data;
 
     // 이미 미들웨어에서 검증되었지만 타입 안정성을 위해 체크
     if (!user) {
@@ -106,10 +111,11 @@ export class RoomsGateway implements OnGatewayInit, OnGatewayConnection, OnGatew
         id: user.id,
         nickname: user.nickname,
         socketId: client.id,
+        deviceType,
       });
 
       client.join(roomId);
-      client.data.roomId = roomId; // 연결 끊김 처리를 위해 저장
+      client.data['roomId'] = roomId; // 연결 끊김 처리를 위해 저장
 
       this.logger.log(`User ${user.nickname} joined room ${roomId}`);
 
@@ -166,5 +172,18 @@ export class RoomsGateway implements OnGatewayInit, OnGatewayConnection, OnGatew
     const match = cookieString.match(new RegExp('(^| )' + key + '=([^;]+)'));
     if (match) return match[2];
     return null;
+  }
+
+  private getDeviceType(userAgent: string): 'mobile' | 'tablet' | 'desktop' {
+    const ua = userAgent.toLowerCase();
+    if (/(tablet|ipad|playbook|silk)|(android(?!.*mobi))/i.test(ua)) {
+      return 'tablet';
+    }
+    if (
+      /Mobile|Android|iP(hone|od)|IEMobile|BlackBerry|Kindle|Silk-Accelerated|(hpw|web)OS|Opera M(obi|ini)/.test(ua)
+    ) {
+      return 'mobile';
+    }
+    return 'desktop';
   }
 }

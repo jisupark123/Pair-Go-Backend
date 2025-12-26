@@ -2,7 +2,7 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { nanoid } from 'nanoid';
 
 import { CreateRoomDto } from '@/rooms/dto/create-room.dto';
-import { Room } from '@/rooms/rooms.interface';
+import { DeviceType, Room } from '@/rooms/rooms.interface';
 
 @Injectable()
 export class RoomsService {
@@ -34,13 +34,35 @@ export class RoomsService {
   }
 
   // Socket Gateway에서 사용할 메서드들
-  addPlayerToRoom(roomId: string, player: { id: number; nickname: string; socketId: string }) {
+  addPlayerToRoom(roomId: string, player: { id: number; nickname: string; socketId: string; deviceType: DeviceType }) {
     const room = this.getRoom(roomId);
+
+    if (room.players.length >= 4) {
+      throw new Error('방이 가득 찼습니다.');
+    }
+
+    // 팀 할당 규칙: 인원 균형을 맞추어 팀을 자동 배정 (최대 2:2)
+    // - 레드팀과 블루팀의 현재 인원수를 확인하여 균형을 맞춥니다.
+    // - 두 팀의 인원수가 같으면 무작위(50%)로 팀을 결정합니다.
+    // - 한 팀의 인원이 이미 2명(최대)인 경우, 나머지 팀으로 자동 배정합니다.
+    const redCount = room.players.filter((p) => p.team === 'red').length;
+    const blueCount = room.players.filter((p) => p.team === 'blue').length;
+    let team: 'red' | 'blue';
+
+    if (redCount < 2 && blueCount < 2) {
+      team = Math.random() < 0.5 ? 'red' : 'blue';
+    } else if (redCount >= 2) {
+      team = 'blue';
+    } else {
+      team = 'red';
+    }
+
     const isHost = room.hostId === player.id;
 
     room.players.push({
       ...player,
       isReady: isHost, // 방장은 항상 준비 상태
+      team,
     });
 
     return room;

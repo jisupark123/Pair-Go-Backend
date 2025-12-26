@@ -1,14 +1,27 @@
 import { User } from '@prisma/client';
 import { Socket } from 'socket.io';
 
+export type DeviceType = 'mobile' | 'tablet' | 'desktop';
+
 export interface AuthenticatedSocket extends Socket {
   data: {
     user: User;
-    roomId?: string;
+    deviceType: DeviceType;
   };
 }
 
-export interface Room {
+export type Team = 'red' | 'blue';
+
+export type Player = {
+  id: number;
+  nickname: string;
+  socketId: string;
+  isReady: boolean;
+  team: Team;
+  deviceType: DeviceType;
+};
+
+export type Room = {
   id: string; // 초대 코드 (Room ID)
   hostId: number; // 방장 ID
   title: string;
@@ -20,11 +33,6 @@ export interface Room {
     countdownTime: string;
     countdownCount: string;
   };
-  players: {
-    id: number;
-    nickname: string;
-    socketId: string;
-    isReady: boolean;
-  }[];
+  players: Player[];
   createdAt: Date;
-}
+};
