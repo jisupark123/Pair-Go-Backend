@@ -1,3 +1,13 @@
+import { User } from '@prisma/client';
+import { Socket } from 'socket.io';
+
+export interface AuthenticatedSocket extends Socket {
+  data: {
+    user: User;
+    roomId?: string;
+  };
+}
+
 export interface Room {
   id: string; // 초대 코드 (Room ID)
   hostId: number; // 방장 ID

@@ -46,14 +46,19 @@ export class RoomsService {
     return room;
   }
 
-  removePlayerFromRoom(roomId: string, socketId: string) {
+  // player 삭제 후
+  // - 빈 방이면 방 삭제 후 null 반환
+  // - 빈 방이 아니면 방 반환
+  removePlayerFromRoom(roomId: string, socketId: string): Room | null {
     const room = this.rooms.get(roomId);
-    if (room) {
-      room.players = room.players.filter((p) => p.socketId !== socketId);
-      if (room.players.length === 0) {
-        this.rooms.delete(roomId); // 빈 방 삭제
-      }
+    if (!room) return null;
+
+    room.players = room.players.filter((p) => p.socketId !== socketId);
+    if (room.players.length === 0) {
+      this.rooms.delete(roomId); // 빈 방 삭제
+      return null;
     }
+    return room;
   }
 
   updatePlayerStatus(roomId: string, socketId: string, isReady: boolean) {
