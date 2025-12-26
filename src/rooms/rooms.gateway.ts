@@ -10,6 +10,7 @@ import {
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
 
+import { Room } from '@/rooms/rooms.interface';
 import { RoomsService } from '@/rooms/rooms.service';
 import { UsersService } from '@/users/users.service';
 
@@ -92,6 +93,42 @@ export class RoomsGateway implements OnGatewayConnection, OnGatewayDisconnect {
       this.server.to(roomId).emit('roomUpdate', updatedRoom);
 
       return { success: true, room: updatedRoom };
+    } catch (error) {
+      throw new WsException(error.message);
+    }
+  }
+
+  @SubscribeMessage('updateReadyStatus')
+  handleUpdateReadyStatus(client: Socket, payload: { roomId: string; isReady: boolean }) {
+    const { user } = client.data;
+    if (!user) {
+      throw new WsException('Unauthorized');
+    }
+
+    try {
+      const { roomId, isReady } = payload;
+      const updatedRoom = this.roomsService.updatePlayerStatus(roomId, client.id, isReady);
+
+      this.server.to(roomId).emit('roomUpdate', updatedRoom);
+      return { success: true };
+    } catch (error) {
+      throw new WsException(error.message);
+    }
+  }
+
+  @SubscribeMessage('updateRoomSettings')
+  handleUpdateRoomSettings(client: Socket, payload: { roomId: string; settings: Room['settings'] }) {
+    const { user } = client.data;
+    if (!user) {
+      throw new WsException('Unauthorized');
+    }
+
+    try {
+      const { roomId, settings } = payload;
+      const updatedRoom = this.roomsService.updateRoomSettings(roomId, user.id, settings);
+
+      this.server.to(roomId).emit('roomUpdate', updatedRoom);
+      return { success: true };
     } catch (error) {
       throw new WsException(error.message);
     }

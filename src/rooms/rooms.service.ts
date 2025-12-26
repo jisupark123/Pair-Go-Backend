@@ -55,4 +55,31 @@ export class RoomsService {
       }
     }
   }
+
+  updatePlayerStatus(roomId: string, socketId: string, isReady: boolean) {
+    const room = this.getRoom(roomId);
+    const player = room.players.find((p) => p.socketId === socketId);
+
+    if (player) {
+      if (room.hostId === player.id) {
+        // 방장은 항상 준비 상태
+        player.isReady = true;
+      } else {
+        player.isReady = isReady;
+      }
+    }
+
+    return room;
+  }
+
+  updateRoomSettings(roomId: string, userId: number, settings: Room['settings']) {
+    const room = this.getRoom(roomId);
+
+    if (room.hostId !== userId) {
+      throw new Error('방장만 설정을 변경할 수 있습니다.');
+    }
+
+    room.settings = settings;
+    return room;
+  }
 }
