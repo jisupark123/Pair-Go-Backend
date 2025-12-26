@@ -36,8 +36,12 @@ export class RoomsService {
   // Socket Gateway에서 사용할 메서드들
   addPlayerToRoom(roomId: string, player: { id: number; nickname: string; socketId: string }) {
     const room = this.getRoom(roomId);
+    const isHost = room.hostId === player.id;
 
-    room.players.push(player);
+    room.players.push({
+      ...player,
+      isReady: isHost, // 방장은 항상 준비 상태
+    });
 
     return room;
   }

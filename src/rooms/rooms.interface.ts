@@ -14,6 +14,7 @@ export interface Room {
     id: number;
     nickname: string;
     socketId: string;
+    isReady: boolean;
   }[];
   createdAt: Date;
 }
