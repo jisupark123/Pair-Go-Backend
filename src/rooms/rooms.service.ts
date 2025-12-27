@@ -167,4 +167,18 @@ export class RoomsService {
 
     return { room: updatedRoom, kickedSocketId: socketId };
   }
+
+  updateHost(roomId: string, newHostId: number) {
+    const room = this.getRoom(roomId);
+    const newHost = room.players.find((p) => p.id === newHostId);
+
+    if (!newHost) {
+      throw new NotFoundException('해당 유저가 방에 없습니다.');
+    }
+
+    room.hostId = newHostId;
+    newHost.isReady = true; // 방장은 항상 준비 상태
+
+    return room;
+  }
 }

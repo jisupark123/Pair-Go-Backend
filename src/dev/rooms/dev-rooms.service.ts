@@ -55,4 +55,50 @@ export class DevRoomsService {
       currentRoomState: this.roomsService.getRoom(roomId),
     };
   }
+  changeHostRandom(roomId: string) {
+    const room = this.roomsService.getRoom(roomId);
+    if (!room) {
+      throw new Error('방을 찾을 수 없습니다.');
+    }
+
+    const currentHostId = room.hostId;
+    const eligiblePlayers = room.players.filter((p) => p.id !== currentHostId);
+
+    if (eligiblePlayers.length === 0) {
+      throw new Error('방장을 위임할 다른 플레이어가 없습니다.');
+    }
+
+    const randomPlayer = eligiblePlayers[Math.floor(Math.random() * eligiblePlayers.length)];
+    const updatedRoom = this.roomsService.updateHost(roomId, randomPlayer.id);
+
+    this.roomsGateway.server.to(roomId).emit('roomUpdate', updatedRoom);
+
+    return {
+      message: `방장이 ${randomPlayer.nickname}님으로 변경되었습니다.`,
+      newHost: randomPlayer,
+      room: updatedRoom,
+    };
+  }
+
+  changeHostByNickname(roomId: string, nickname: string) {
+    const room = this.roomsService.getRoom(roomId);
+    if (!room) {
+      throw new Error('방을 찾을 수 없습니다.');
+    }
+
+    const targetPlayer = room.players.find((p) => p.nickname === nickname);
+    if (!targetPlayer) {
+      throw new Error(`닉네임 '${nickname}'을 가진 유저를 찾을 수 없습니다.`);
+    }
+
+    const updatedRoom = this.roomsService.updateHost(roomId, targetPlayer.id);
+
+    this.roomsGateway.server.to(roomId).emit('roomUpdate', updatedRoom);
+
+    return {
+      message: `방장이 ${targetPlayer.nickname}님으로 변경되었습니다.`,
+      newHost: targetPlayer,
+      room: updatedRoom,
+    };
+  }
 }

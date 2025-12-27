@@ -3,6 +3,7 @@ import { ApiOperation, ApiTags } from '@nestjs/swagger';
 
 import { DevRoomsService } from '@/dev/rooms/dev-rooms.service';
 import { AddVirtualPlayersDto } from '@/dev/rooms/dto/add-virtual-players.dto';
+import { ChangeHostDto } from '@/dev/rooms/dto/change-host.dto';
 
 @ApiTags('Dev / Rooms')
 @Controller('dev/rooms')
@@ -13,5 +14,17 @@ export class DevRoomsController {
   @ApiOperation({ summary: '개발용: 특정 방에 가상 유저 N명 추가' })
   addVirtualPlayers(@Param('roomId') roomId: string, @Body() dto: AddVirtualPlayersDto) {
     return this.devRoomsService.addVirtualPlayers(roomId, dto.count);
+  }
+
+  @Post(':roomId/host/random')
+  @ApiOperation({ summary: '개발용: 방장을 무작위 다른 유저로 변경' })
+  changeHostRandom(@Param('roomId') roomId: string) {
+    return this.devRoomsService.changeHostRandom(roomId);
+  }
+
+  @Post(':roomId/host')
+  @ApiOperation({ summary: '개발용: 닉네임으로 방장 변경' })
+  changeHostByNickname(@Param('roomId') roomId: string, @Body() dto: ChangeHostDto) {
+    return this.devRoomsService.changeHostByNickname(roomId, dto.nickname);
   }
 }
