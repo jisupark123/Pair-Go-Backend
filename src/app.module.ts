@@ -7,6 +7,7 @@ import { AuthModule } from '@/auth/auth.module';
 import { CommonModule } from '@/common/common.module';
 import { LoggerMiddleware } from '@/common/middleware/logger.middleware';
 import { DatabaseModule } from '@/database/database.module';
+import { DevModule } from '@/dev/dev.module';
 import { FriendsModule } from '@/friends/friends.module';
 // import { GameModule } from '@/game/game.module';
 import { RoomsModule } from '@/rooms/rooms.module';
@@ -23,6 +24,7 @@ import { UsersModule } from '@/users/users.module';
     AuthModule,
     UsersModule,
     RoomsModule,
+    DevModule,
     FriendsModule,
   ],
   controllers: [AppController],
