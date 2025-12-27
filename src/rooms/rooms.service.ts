@@ -79,11 +79,23 @@ export class RoomsService {
     const room = this.rooms.get(roomId);
     if (!room) return null;
 
+    const leavingPlayer = room.players.find((p) => p.socketId === socketId);
+    if (!leavingPlayer) return room;
+
     room.players = room.players.filter((p) => p.socketId !== socketId);
+
     if (room.players.length === 0) {
       this.rooms.delete(roomId); // 빈 방 삭제
       return null;
     }
+
+    // 방장이 나간 경우 가장 먼저 들어온 사람(배열의 첫 번째)에게 방장 위임
+    if (room.hostId === leavingPlayer.id) {
+      const newHost = room.players[0];
+      room.hostId = newHost.id;
+      newHost.isReady = true; // 방장은 항상 준비 상태
+    }
+
     return room;
   }
 

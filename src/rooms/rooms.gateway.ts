@@ -198,7 +198,7 @@ export class RoomsGateway implements OnGatewayInit, OnGatewayConnection, OnGatew
       return 'tablet';
     }
     if (
-      /Mobile|Android|iP(hone|od)|IEMobile|BlackBerry|Kindle|Silk-Accelerated|(hpw|web)OS|Opera M(obi|ini)/.test(ua)
+      /Mobile|Android|iP(hone|od)|IEMobile|BlackBerry|Kindle|Silk-Accelerated|(hpw|web)OS|Opera M(obi|ini)/i.test(ua)
     ) {
       return 'mobile';
     }
