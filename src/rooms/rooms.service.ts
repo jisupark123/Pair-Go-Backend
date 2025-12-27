@@ -10,13 +10,11 @@ export class RoomsService {
 
   createRoom(hostId: number, createRoomDto: CreateRoomDto): Room {
     const roomId = nanoid(6); // 6자리 초대 코드 생성
-    const { title, ...settings } = createRoomDto;
 
     const newRoom: Room = {
       id: roomId,
       hostId,
-      title,
-      settings,
+      settings: createRoomDto,
       players: [], // 플레이어는 소켓 연결 후 추가
       createdAt: new Date(),
     };

@@ -3,10 +3,6 @@ import { IsString, IsIn, IsNotEmpty } from 'class-validator';
 export class CreateRoomDto {
   @IsString()
   @IsNotEmpty()
-  title: string;
-
-  @IsString()
-  @IsNotEmpty()
   handicap: string;
 
   @IsString()

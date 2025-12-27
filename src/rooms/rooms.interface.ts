@@ -24,7 +24,6 @@ export type Player = {
 export type Room = {
   id: string; // 초대 코드 (Room ID)
   hostId: number; // 방장 ID
-  title: string;
   settings: {
     handicap: string;
     komi: string;

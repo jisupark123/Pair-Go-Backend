@@ -24,7 +24,6 @@ describe('RoomsService', () => {
     it('올바른 방장과 설정으로 새 방을 생성해야 함', () => {
       const hostId = 1;
       const dto: CreateRoomDto = {
-        title: 'Test Room',
         handicap: 'none',
         komi: '6.5',
         stoneColor: 'auto',
@@ -37,19 +36,18 @@ describe('RoomsService', () => {
 
       expect(room).toBeDefined();
       expect(room.hostId).toBe(hostId);
-      expect(room.title).toBe(dto.title);
       expect(room.players).toEqual([]);
       expect(room.createdAt).toBeInstanceOf(Date);
     });
 
     it('6자리 길이의 nanoid ID를 생성해야 함', () => {
-      const room = service.createRoom(1, { title: 'Test' } as CreateRoomDto);
+      const room = service.createRoom(1, {} as CreateRoomDto);
       expect(room.id).toHaveLength(6);
       expect(typeof room.id).toBe('string');
     });
 
     it('생성된 방을 Map에 저장해야 함', () => {
-      const room = service.createRoom(1, { title: 'Test' } as CreateRoomDto);
+      const room = service.createRoom(1, {} as CreateRoomDto);
       const retrieved = service.getRoom(room.id);
       expect(retrieved).toBe(room);
     });
@@ -57,7 +55,7 @@ describe('RoomsService', () => {
 
   describe('getRoom (방 조회)', () => {
     it('방이 존재하면 해당 방 정보를 반환해야 함', () => {
-      const room = service.createRoom(1, { title: 'Test' } as CreateRoomDto);
+      const room = service.createRoom(1, {} as CreateRoomDto);
       expect(service.getRoom(room.id)).toBe(room);
     });
 
@@ -71,7 +69,7 @@ describe('RoomsService', () => {
     const hostId = 1;
 
     beforeEach(() => {
-      const room = service.createRoom(hostId, { title: 'Test' } as CreateRoomDto);
+      const room = service.createRoom(hostId, {} as CreateRoomDto);
       roomId = room.id;
     });
 
@@ -181,7 +179,7 @@ describe('RoomsService', () => {
     const hostId = 1;
 
     beforeEach(() => {
-      roomId = service.createRoom(hostId, { title: 'Test' } as CreateRoomDto).id;
+      roomId = service.createRoom(hostId, {} as CreateRoomDto).id;
       service.addPlayerToRoom(roomId, {
         id: hostId,
         nickname: 'Host',
@@ -234,7 +232,7 @@ describe('RoomsService', () => {
     let roomId: string;
 
     beforeEach(() => {
-      const room = service.createRoom(1, { title: 'Test' } as CreateRoomDto);
+      const room = service.createRoom(1, {} as CreateRoomDto);
       roomId = room.id;
       service.addPlayerToRoom(roomId, { id: 1, nickname: 'Host', socketId: 's1', deviceType: 'desktop' as DeviceType });
       service.addPlayerToRoom(roomId, {
@@ -265,7 +263,7 @@ describe('RoomsService', () => {
     const hostId = 1;
 
     beforeEach(() => {
-      roomId = service.createRoom(hostId, { title: 'Test' } as CreateRoomDto).id;
+      roomId = service.createRoom(hostId, {} as CreateRoomDto).id;
     });
 
     it('방장이 요청한 경우 설정을 업데이트해야 함', () => {
@@ -293,7 +291,7 @@ describe('RoomsService', () => {
     let roomId: string;
 
     beforeEach(() => {
-      roomId = service.createRoom(1, { title: 'Test' } as CreateRoomDto).id;
+      roomId = service.createRoom(1, {} as CreateRoomDto).id;
       service.addPlayerToRoom(roomId, { id: 1, nickname: 'Host', socketId: 's1', deviceType: 'desktop' as DeviceType });
       service.addPlayerToRoom(roomId, {
         id: 2,
@@ -343,7 +341,7 @@ describe('RoomsService', () => {
     const hostId = 1;
 
     beforeEach(() => {
-      roomId = service.createRoom(hostId, { title: 'Test' } as CreateRoomDto).id;
+      roomId = service.createRoom(hostId, {} as CreateRoomDto).id;
       service.addPlayerToRoom(roomId, {
         id: hostId,
         nickname: 'Host',
