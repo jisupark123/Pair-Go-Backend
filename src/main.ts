@@ -1,3 +1,4 @@
+import { ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import cookieParser from 'cookie-parser';
 
@@ -5,6 +6,13 @@ import { AppModule } from '@/app.module';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
+
+  app.useGlobalPipes(
+    new ValidationPipe({
+      whitelist: true, // 입력값이 DTO에 정의된 프로퍼티만 허용
+      forbidNonWhitelisted: true, // 입력값에 DTO에 정의된 프로퍼티가 없으면 에러
+    }),
+  );
 
   app.setGlobalPrefix('api');
 
