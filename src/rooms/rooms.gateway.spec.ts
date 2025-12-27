@@ -2,7 +2,7 @@ import { JwtService } from '@nestjs/jwt';
 import { Test, TestingModule } from '@nestjs/testing';
 import { WsException } from '@nestjs/websockets';
 import { User } from '@prisma/client';
-import { Server, Socket } from 'socket.io';
+import { Namespace, Server, Socket } from 'socket.io';
 
 import { RoomsGateway } from '@/rooms/rooms.gateway';
 import { AuthenticatedSocket, Room } from '@/rooms/rooms.interface';
@@ -34,7 +34,7 @@ describe('RoomsGateway', () => {
   let roomsService: RoomsService;
   let jwtService: JwtService;
   let usersService: UsersService;
-  let server: Server;
+  let server: Namespace;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -49,6 +49,7 @@ describe('RoomsGateway', () => {
             updatePlayerStatus: jest.fn(),
             updateRoomSettings: jest.fn(),
             changeTeam: jest.fn(),
+            kickPlayer: jest.fn(),
           },
         },
         {
@@ -71,12 +72,12 @@ describe('RoomsGateway', () => {
     jwtService = module.get<JwtService>(JwtService);
     usersService = module.get<UsersService>(UsersService);
 
-    // Mock Server
+    // Mock Server (Namespace)
     server = {
       use: jest.fn(),
       to: jest.fn().mockReturnThis(),
       emit: jest.fn(),
-    } as unknown as Server;
+    } as unknown as Namespace;
     gateway.server = server;
   });
 
@@ -96,7 +97,7 @@ describe('RoomsGateway', () => {
 
     beforeEach(() => {
       // Capture middleware
-      gateway.afterInit(server);
+      gateway.afterInit(server as unknown as Server);
       mockMiddleware = (server.use as jest.Mock).mock.calls[0][0];
 
       // Prepare basic mock socket
@@ -265,6 +266,43 @@ describe('RoomsGateway', () => {
         throw new Error('권한이 없습니다.');
       });
       expect(() => gateway.handleChangeTeam(client, { roomId, targetUserId: 2 })).toThrow(WsException);
+    });
+
+    it('kickPlayer: 성공 시 유저 강제 퇴장, imgOut 전송, roomUpdate 브로드캐스트', () => {
+      const targetId = 2;
+      const kickedSocketId = 'kicked_socket_id';
+
+      // Mocking service return
+      (roomsService.kickPlayer as jest.Mock).mockReturnValue({
+        room: mockRoom,
+        kickedSocketId,
+      });
+
+      // Mocking sockets
+      const kickedClient = {
+        leave: jest.fn(),
+        emit: jest.fn(),
+        data: { roomId },
+      } as unknown as Socket;
+
+      // server.sockets is a Map (Namespace structure)
+      (server as unknown as { sockets: Map<string, unknown> }).sockets = new Map([[kickedSocketId, kickedClient]]);
+
+      gateway.handleKickPlayer(client, { roomId, targetId });
+
+      expect(roomsService.kickPlayer).toHaveBeenCalledWith(roomId, mockUser.id, targetId);
+      expect(kickedClient.leave).toHaveBeenCalledWith(roomId);
+      expect(kickedClient.emit).toHaveBeenCalledWith('imgOut', { roomId });
+      expect(kickedClient.data['roomId']).toBeNull();
+      expect(server.to).toHaveBeenCalledWith(roomId);
+      expect(server.emit).toHaveBeenCalledWith('roomUpdate', mockRoom);
+    });
+
+    it('kickPlayer: 서비스 에러 시 WsException', () => {
+      (roomsService.kickPlayer as jest.Mock).mockImplementation(() => {
+        throw new Error('권한이 없습니다.');
+      });
+      expect(() => gateway.handleKickPlayer(client, { roomId: 'r1', targetId: 2 })).toThrow(WsException);
     });
   });
 

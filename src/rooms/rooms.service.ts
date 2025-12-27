@@ -144,4 +144,27 @@ export class RoomsService {
 
     return room;
   }
+
+  kickPlayer(roomId: string, requesterId: number, targetId: number) {
+    const room = this.getRoom(roomId);
+
+    if (room.hostId !== requesterId) {
+      throw new Error('방장만 강제 퇴장시킬 수 있습니다.');
+    }
+
+    if (requesterId === targetId) {
+      throw new Error('자기 자신을 강제 퇴장시킬 수 없습니다.');
+    }
+
+    const targetPlayer = room.players.find((p) => p.id === targetId);
+    if (!targetPlayer) {
+      throw new NotFoundException('대상 플레이어를 찾을 수 없습니다.');
+    }
+
+    // Reuse remove logic, need to return updated room and kicked socket ID
+    const { socketId } = targetPlayer;
+    const updatedRoom = this.removePlayerFromRoom(roomId, socketId);
+
+    return { room: updatedRoom, kickedSocketId: socketId };
+  }
 }

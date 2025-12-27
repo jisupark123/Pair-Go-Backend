@@ -337,4 +337,45 @@ describe('RoomsService', () => {
       expect(() => service.changeTeam(roomId, 1, 999)).toThrow(NotFoundException);
     });
   });
+
+  describe('kickPlayer (강제 퇴장)', () => {
+    let roomId: string;
+    const hostId = 1;
+
+    beforeEach(() => {
+      roomId = service.createRoom(hostId, { title: 'Test' } as CreateRoomDto).id;
+      service.addPlayerToRoom(roomId, {
+        id: hostId,
+        nickname: 'Host',
+        socketId: 's1',
+        deviceType: 'desktop' as DeviceType,
+      });
+      service.addPlayerToRoom(roomId, {
+        id: 2,
+        nickname: 'Guest',
+        socketId: 's2',
+        deviceType: 'desktop' as DeviceType,
+      });
+    });
+
+    it('방장은 다른 플레이어를 강제 퇴장시킬 수 있어야 함', () => {
+      const { room, kickedSocketId } = service.kickPlayer(roomId, hostId, 2);
+      expect(kickedSocketId).toBe('s2');
+      expect(room).toBeDefined();
+      if (!room) throw new Error('Room should trigger'); // TS Guard
+      expect(room.players.find((p) => p.id === 2)).toBeUndefined();
+    });
+
+    it('방장이 아닌 유저가 강제 퇴장을 시도하면 에러를 던져야 함', () => {
+      expect(() => service.kickPlayer(roomId, 2, 1)).toThrow('방장만 강제 퇴장시킬 수 있습니다.');
+    });
+
+    it('자기 자신을 강제 퇴장시키려 하면 에러를 던져야 함', () => {
+      expect(() => service.kickPlayer(roomId, hostId, hostId)).toThrow('자기 자신을 강제 퇴장시킬 수 없습니다.');
+    });
+
+    it('대상 유저가 방에 없으면 NotFoundException을 던져야 함', () => {
+      expect(() => service.kickPlayer(roomId, hostId, 999)).toThrow(NotFoundException);
+    });
+  });
 });

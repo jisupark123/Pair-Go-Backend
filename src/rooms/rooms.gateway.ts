@@ -1,4 +1,5 @@
 import { Logger, UnauthorizedException } from '@nestjs/common';
+import { UseInterceptors } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import {
   OnGatewayConnection,
@@ -9,8 +10,9 @@ import {
   WebSocketServer,
   WsException,
 } from '@nestjs/websockets';
-import { Server } from 'socket.io';
+import { Namespace, Server } from 'socket.io'; // Server is kept for afterInit type
 
+import { SocketLoggingInterceptor } from '@/common/interceptors/socket-logging.interceptor';
 import type { AuthenticatedSocket, Room } from '@/rooms/rooms.interface';
 import { RoomsService } from '@/rooms/rooms.service';
 import { UsersService } from '@/users/users.service';
@@ -22,9 +24,10 @@ import { UsersService } from '@/users/users.service';
     credentials: true,
   },
 })
+@UseInterceptors(SocketLoggingInterceptor)
 export class RoomsGateway implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect {
   @WebSocketServer()
-  server: Server;
+  server: Namespace;
 
   private logger = new Logger('RoomsGateway');
 
@@ -35,7 +38,20 @@ export class RoomsGateway implements OnGatewayInit, OnGatewayConnection, OnGatew
   ) {}
 
   afterInit(server: Server) {
-    server.use(async (socket, next) => {
+    // Note: server here is actually the main Server instance or Namespace depending on implementation detail,
+    // but usually middleware is attached to the namespace.
+    // However, in NestJS, the argument to afterInit for a namespaced gateway might be the Namespace itself.
+    // Let's safe cast or handle generically.
+    // Actually, 'server' argument in afterInit IS the object decorated with @WebSocketServer.
+    // So it should be Namespace.
+
+    // To be safe and correct with types:
+    // When using namespace, @WebSocketServer() returns a Namespace.
+    // So 'this.server' is Namespace.
+    // But 'afterInit' interface says 'server: any'. We can type it as Namespace.
+
+    // server.use is available on Namespace too.
+    (server as unknown as Namespace).use(async (socket, next) => {
       try {
         // 0. User-Agent 파싱 및 기기 정보 저장
         const userAgent = socket.handshake.headers['user-agent'] || '';
@@ -86,8 +102,7 @@ export class RoomsGateway implements OnGatewayInit, OnGatewayConnection, OnGatew
     if (roomId) {
       const updatedRoom = this.roomsService.removePlayerFromRoom(roomId, client.id);
       if (updatedRoom) {
-        this.server.to(roomId).emit('roomUpdate', updatedRoom);
-        this.logger.log(`User removed from room ${roomId}`);
+        this.emitToRoom(roomId, 'roomUpdate', updatedRoom);
       } else {
         this.logger.log(`Room ${roomId} removed`);
       }
@@ -97,7 +112,6 @@ export class RoomsGateway implements OnGatewayInit, OnGatewayConnection, OnGatew
   // 대기실 입장
   @SubscribeMessage('joinRoom')
   handleJoinRoom(client: AuthenticatedSocket, payload: { roomId: string }) {
-    this.logger.log(`User ${client.data.user?.nickname} tried to join room ${payload.roomId}`);
     const { user, deviceType } = client.data;
 
     // 이미 미들웨어에서 검증되었지만 타입 안정성을 위해 체크
@@ -117,10 +131,8 @@ export class RoomsGateway implements OnGatewayInit, OnGatewayConnection, OnGatew
       client.join(roomId);
       client.data['roomId'] = roomId; // 연결 끊김 처리를 위해 저장
 
-      this.logger.log(`User ${user.nickname} joined room ${roomId}`);
-
       // 해당 방의 모든 유저에게 방 정보 업데이트 전송
-      this.server.to(roomId).emit('roomUpdate', updatedRoom);
+      this.emitToRoom(roomId, 'roomUpdate', updatedRoom);
 
       return { success: true, room: updatedRoom };
     } catch (error) {
@@ -135,13 +147,11 @@ export class RoomsGateway implements OnGatewayInit, OnGatewayConnection, OnGatew
       throw new WsException('Unauthorized');
     }
 
-    this.logger.log(`User ${user.nickname} updated ready status in room ${payload.roomId}: ${payload.isReady}`);
-
     try {
       const { roomId, isReady } = payload;
       const updatedRoom = this.roomsService.updatePlayerStatus(roomId, client.id, isReady);
 
-      this.server.to(roomId).emit('roomUpdate', updatedRoom);
+      this.emitToRoom(roomId, 'roomUpdate', updatedRoom);
       return { success: true };
     } catch (error) {
       throw new WsException(error.message);
@@ -155,13 +165,39 @@ export class RoomsGateway implements OnGatewayInit, OnGatewayConnection, OnGatew
       throw new WsException('Unauthorized');
     }
 
-    this.logger.log(`User ${user.nickname} updated room settings in room ${payload.roomId}`);
-
     try {
       const { roomId, settings } = payload;
       const updatedRoom = this.roomsService.updateRoomSettings(roomId, user.id, settings);
 
-      this.server.to(roomId).emit('roomUpdate', updatedRoom);
+      this.emitToRoom(roomId, 'roomUpdate', updatedRoom);
+      return { success: true };
+    } catch (error) {
+      throw new WsException(error.message);
+    }
+  }
+
+  @SubscribeMessage('kickPlayer')
+  handleKickPlayer(client: AuthenticatedSocket, payload: { roomId: string; targetId: number }) {
+    const { user } = client.data;
+    if (!user) {
+      throw new WsException('Unauthorized');
+    }
+
+    try {
+      const { roomId, targetId } = payload;
+      const { room: updatedRoom, kickedSocketId } = this.roomsService.kickPlayer(roomId, user.id, targetId);
+
+      // Force kicked user to leave the socket room
+      const kickedClient = this.server.sockets.get(kickedSocketId);
+      if (kickedClient) {
+        kickedClient.leave(roomId);
+        this.logger.log(`Emitting 'imgOut' to user ${kickedSocketId} in room ${roomId}`);
+        kickedClient.emit('imgOut', { roomId }); // Custom event to notify user they were kicked
+        kickedClient.data['roomId'] = null; // Clear room data
+      }
+
+      // Broadcast update to remaining players
+      this.emitToRoom(roomId, 'roomUpdate', updatedRoom);
       return { success: true };
     } catch (error) {
       throw new WsException(error.message);
@@ -179,11 +215,17 @@ export class RoomsGateway implements OnGatewayInit, OnGatewayConnection, OnGatew
       const { roomId, targetUserId } = payload;
       const updatedRoom = this.roomsService.changeTeam(roomId, user.id, targetUserId);
 
-      this.server.to(roomId).emit('roomUpdate', updatedRoom);
+      this.emitToRoom(roomId, 'roomUpdate', updatedRoom);
       return { success: true };
     } catch (error) {
       throw new WsException(error.message);
     }
+  }
+
+  // Helper method to log and emit
+  private emitToRoom(roomId: string, event: string, data: unknown) {
+    this.logger.log(`Emitting '${event}' to room ${roomId}`);
+    this.server.to(roomId).emit(event, data);
   }
 
   private parseCookie(cookieString: string, key: string): string | null {
