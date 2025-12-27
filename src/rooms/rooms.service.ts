@@ -37,6 +37,10 @@ export class RoomsService {
   addPlayerToRoom(roomId: string, player: { id: number; nickname: string; socketId: string; deviceType: DeviceType }) {
     const room = this.getRoom(roomId);
 
+    if (room.players.some((p) => p.id === player.id)) {
+      throw new Error('이미 방에 참가 중입니다.');
+    }
+
     if (room.players.length >= 4) {
       throw new Error('방이 가득 찼습니다.');
     }
