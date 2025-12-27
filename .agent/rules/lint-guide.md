@@ -1,10 +1,13 @@
 ---
-trigger: always_on
+trigger: model_decision
+description: when writing code
 ---
 
 # Linting & Coding Standards Guide
 
 이 프로젝트는 엄격한 ESLint 및 Prettier 규칙을 따릅니다. 코드를 작성하거나 수정할 때 아래 규칙들을 반드시 준수해야 합니다.
+
+코드 작성 완료 후에는 항상 `pnpm lint && pnpm typecheck` 명령어를 통해 검사를 진행해야 합니다.
 
 ## 1. 기본 스타일 (Prettier & General)
 

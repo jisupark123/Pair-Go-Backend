@@ -1,5 +1,6 @@
 ---
-trigger: always_on
+trigger: model_decision
+description: when implementing or refactoring API
 ---
 
 ## API 문서화 가이드 (Swagger)

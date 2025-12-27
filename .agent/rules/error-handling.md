@@ -1,5 +1,6 @@
 ---
-trigger: always_on
+trigger: model_decision
+description: when implementing error handling or logging
 ---
 
 ## 에러 처리 및 로깅 가이드
