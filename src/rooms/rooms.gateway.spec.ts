@@ -246,9 +246,17 @@ describe('RoomsGateway', () => {
     });
 
     it('updateRoomSettings: 방장이 요청 시 설정이 업데이트되어야 함', () => {
-      gateway.handleUpdateRoomSettings(client, { roomId, settings: {} as Room['settings'] });
+      const newSettings: Room['settings'] = {
+        handicap: 'none',
+        komi: '6.5',
+        stoneColor: 'auto',
+        basicTime: '30m',
+        countdownTime: '30s',
+        countdownCount: '3',
+      };
+      gateway.handleUpdateRoomSettings(client, { roomId, settings: newSettings });
 
-      expect(roomsService.updateRoomSettings).toHaveBeenCalledWith(roomId, mockUser.id, {});
+      expect(roomsService.updateRoomSettings).toHaveBeenCalledWith(roomId, mockUser.id, newSettings);
       expect(server.to).toHaveBeenCalledWith(roomId);
       expect(server.emit).toHaveBeenCalledWith('roomUpdate', expect.anything());
     });
