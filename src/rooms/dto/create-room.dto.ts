@@ -10,8 +10,8 @@ export class CreateRoomDto {
   komi: string;
 
   @IsString()
-  @IsIn(['auto', 'black', 'white'])
-  stoneColor: 'auto' | 'black' | 'white';
+  @IsIn(['auto', 'manual'])
+  stoneColorMethod: 'auto' | 'manual';
 
   @IsString()
   @IsNotEmpty()

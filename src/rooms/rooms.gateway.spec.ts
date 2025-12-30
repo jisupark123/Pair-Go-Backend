@@ -249,7 +249,7 @@ describe('RoomsGateway', () => {
       const newSettings: Room['settings'] = {
         handicap: 'none',
         komi: '6.5',
-        stoneColor: 'auto',
+        stoneColorMethod: 'auto',
         basicTime: '30m',
         countdownTime: '30s',
         countdownCount: '3',

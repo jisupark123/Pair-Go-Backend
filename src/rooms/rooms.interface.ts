@@ -25,12 +25,12 @@ export type Room = {
   id: string; // 초대 코드 (Room ID)
   hostId: number; // 방장 ID
   settings: {
-    handicap: string;
-    komi: string;
-    stoneColor: 'auto' | 'black' | 'white';
-    basicTime: string;
-    countdownTime: string;
-    countdownCount: string;
+    handicap: string; // (몇점)접바둑 (0이면 호선(덤 6.5집)이고 komi 설정값은 '0'으로 입력됨)
+    komi: string; // 덤 (흑 기준)
+    stoneColorMethod: 'auto' | 'manual'; // 자동돌가림, 방에서 선택
+    basicTime: string; // 기본 시간
+    countdownTime: string; // 초읽기 시간
+    countdownCount: string; // 초읽기 횟수
   };
   players: Player[];
   createdAt: Date;
