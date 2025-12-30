@@ -27,8 +27,12 @@ export default defineConfig(
       eqeqeq: ['error', 'always'], // == 대신 === 사용 강제
 
       // typescript-eslint
-      '@typescript-eslint/array-type': 0,
-      '@typescript-eslint/ban-ts-comment': 0,
+      '@typescript-eslint/array-type': 0, // string[] 이나 Array<string> 모두 사용 허용
+      '@typescript-eslint/ban-ts-comment': 0, // ts-ignore 사용 허용
+      '@typescript-eslint/no-explicit-any': 'error', // any 타입 사용 금지
+      '@typescript-eslint/no-var-requires': 'error', // require 사용 금지
+      '@typescript-eslint/no-require-imports': 'error', // require import 사용 금지
+      '@typescript-eslint/no-empty-object-type': 'error', // 빈 객체 타입 사용 금지
 
       '@typescript-eslint/no-unused-vars': [
         'warn',
@@ -37,9 +41,6 @@ export default defineConfig(
           varsIgnorePattern: '^_', // _로 시작하는 변수는 미사용 허용
         },
       ],
-      '@typescript-eslint/no-var-requires': 0,
-      '@typescript-eslint/no-require-imports': 0,
-      '@typescript-eslint/no-empty-object-type': 0,
 
       'no-restricted-imports': [
         'error',
