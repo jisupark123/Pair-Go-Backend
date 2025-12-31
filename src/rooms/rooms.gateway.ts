@@ -73,6 +73,30 @@ export class RoomsGateway implements OnGatewayDisconnect {
     }
   }
 
+  @SubscribeMessage('leaveRoom')
+  handleLeaveRoom(client: AuthenticatedSocket, payload: { roomId: string }) {
+    const { user } = client.data;
+    if (!user) {
+      throw new WsException('Unauthorized');
+    }
+
+    try {
+      const { roomId } = payload;
+      const updatedRoom = this.roomsService.removePlayerFromRoom(roomId, client.id);
+
+      client.leave(roomId);
+      client.data['roomId'] = null;
+
+      if (updatedRoom) {
+        this.emitToRoom(roomId, 'roomUpdate', updatedRoom);
+      }
+
+      return { success: true };
+    } catch (error) {
+      throw new WsException(error.message);
+    }
+  }
+
   @SubscribeMessage('updateReadyStatus')
   handleUpdateReadyStatus(client: AuthenticatedSocket, payload: { roomId: string; isReady: boolean }) {
     const { user } = client.data;
