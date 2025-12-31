@@ -1,14 +1,6 @@
-import { User } from '@prisma/client';
-import { Socket } from 'socket.io';
+import { AuthenticatedSocket, DeviceType } from '@/socket/socket.interface';
 
-export type DeviceType = 'mobile' | 'tablet' | 'desktop';
-
-export interface AuthenticatedSocket extends Socket {
-  data: {
-    user: User;
-    deviceType: DeviceType;
-  };
-}
+export type { AuthenticatedSocket, DeviceType };
 
 export type Team = 'red' | 'blue';
 

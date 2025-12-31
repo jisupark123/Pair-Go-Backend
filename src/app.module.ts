@@ -11,6 +11,7 @@ import { DevModule } from '@/dev/dev.module';
 import { FriendsModule } from '@/friends/friends.module';
 // import { GameModule } from '@/game/game.module';
 import { RoomsModule } from '@/rooms/rooms.module';
+import { SocketModule } from '@/socket/socket.module';
 import { UsersModule } from '@/users/users.module';
 
 @Module({
@@ -26,6 +27,7 @@ import { UsersModule } from '@/users/users.module';
     RoomsModule,
     DevModule,
     FriendsModule,
+    SocketModule,
   ],
   controllers: [AppController],
   providers: [AppService],
