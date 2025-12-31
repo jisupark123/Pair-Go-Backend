@@ -172,6 +172,41 @@ describe('RoomsService', () => {
       const p3 = r3.players.find((p) => p.id === 12);
       expect(p3?.team).toBe('blue');
     });
+
+    it('삭제 대기 중인 방에 플레이어가 입장하면 삭제가 취소되고 waiting 상태로 변경되어야 함', () => {
+      jest.useFakeTimers();
+
+      // 테스트를 위해 플레이어 추가
+      service.addPlayerToRoom(roomId, { id: 1, nickname: 'Host', socketId: 's1', deviceType: 'desktop' as DeviceType });
+
+      // 방 비우기
+      service.removePlayerFromRoom(roomId, 's1'); // 여기서 deleting 상태 및 타이머 시작
+
+      const room = service.getRoom(roomId);
+      expect(room.status).toBe('deleting');
+
+      // 4초 경과 (아직 삭제 안 됨)
+      jest.advanceTimersByTime(4000);
+      expect(service.getRoom(roomId)).toBeDefined();
+
+      // 플레이어 재입장
+      service.addPlayerToRoom(roomId, {
+        id: 1,
+        nickname: 'Host',
+        socketId: 's1-new',
+        deviceType: 'desktop',
+      });
+
+      const recoveredRoom = service.getRoom(roomId);
+      expect(recoveredRoom.status).toBe('waiting');
+      expect(recoveredRoom.players).toHaveLength(1);
+
+      // 2초 더 경과 (총 6초 -> 취소 안 됐으면 삭제되었을 시간)
+      jest.advanceTimersByTime(2000);
+      expect(service.getRoom(roomId)).toBeDefined();
+
+      jest.useRealTimers();
+    });
   });
 
   describe('removePlayerFromRoom (플레이어 퇴장)', () => {
@@ -207,12 +242,21 @@ describe('RoomsService', () => {
       expect(result?.players).toHaveLength(1);
     });
 
-    it('마지막 인원이 퇴장하면 방을 삭제하고 null을 반환해야 함', () => {
+    it('마지막 인원이 퇴장하면 방을 삭제 대기 상태로 변경하고, 시간이 지나면 삭제해야 함', () => {
+      jest.useFakeTimers();
       service.removePlayerFromRoom(roomId, 's2');
       const result = service.removePlayerFromRoom(roomId, 's1');
 
-      expect(result).toBeNull();
+      // 즉시 삭제되지 않고 deleting 상태 반환
+      expect(result).toBeDefined();
+      expect(result?.status).toBe('deleting');
+      expect(service.getRoom(roomId)).toBeDefined();
+
+      // 5초 후 삭제 확인
+      jest.advanceTimersByTime(5000);
       expect(() => service.getRoom(roomId)).toThrow(NotFoundException);
+
+      jest.useRealTimers();
     });
 
     it('방장 위임: 방장이 퇴장하면 가장 먼저 들어온 사람에게 방장이 위임되어야 함', () => {

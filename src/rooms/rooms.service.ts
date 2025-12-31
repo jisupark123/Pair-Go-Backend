@@ -7,6 +7,7 @@ import { DeviceType, Room } from '@/rooms/rooms.interface';
 @Injectable()
 export class RoomsService {
   private rooms: Map<string, Room> = new Map();
+  private cleanupTimers: Map<string, NodeJS.Timeout> = new Map();
 
   createRoom(hostId: number, createRoomDto: CreateRoomDto): Room {
     const roomId = nanoid(6); // 6자리 초대 코드 생성
@@ -14,6 +15,7 @@ export class RoomsService {
     const newRoom: Room = {
       id: roomId,
       hostId,
+      status: 'waiting',
       settings: createRoomDto,
       players: [], // 플레이어는 소켓 연결 후 추가
       createdAt: new Date(),
@@ -33,6 +35,17 @@ export class RoomsService {
 
   // Socket Gateway에서 사용할 메서드들
   addPlayerToRoom(roomId: string, player: { id: number; nickname: string; socketId: string; deviceType: DeviceType }) {
+    // 삭제 대기 중인 방이라면 삭제 취소 및 상태 변경
+    if (this.cleanupTimers.has(roomId)) {
+      clearTimeout(this.cleanupTimers.get(roomId));
+      this.cleanupTimers.delete(roomId);
+
+      const room = this.rooms.get(roomId);
+      if (room) {
+        room.status = 'waiting';
+      }
+    }
+
     const room = this.getRoom(roomId);
 
     if (room.players.some((p) => p.id === player.id)) {
@@ -83,8 +96,17 @@ export class RoomsService {
     room.players = room.players.filter((p) => p.socketId !== socketId);
 
     if (room.players.length === 0) {
-      this.rooms.delete(roomId); // 빈 방 삭제
-      return null;
+      room.status = 'deleting';
+
+      // 5초 후 방 삭제 (재접속 대기)
+      const timer = setTimeout(() => {
+        this.rooms.delete(roomId);
+        this.cleanupTimers.delete(roomId);
+      }, 5000);
+
+      this.cleanupTimers.set(roomId, timer);
+
+      return room;
     }
 
     // 방장이 나간 경우 가장 먼저 들어온 사람(배열의 첫 번째)에게 방장 위임

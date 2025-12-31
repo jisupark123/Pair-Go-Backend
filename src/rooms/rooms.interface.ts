@@ -13,9 +13,12 @@ export type Player = {
   deviceType: DeviceType;
 };
 
+export type RoomStatus = 'waiting' | 'playing' | 'deleting';
+
 export type Room = {
   id: string; // 초대 코드 (Room ID)
   hostId: number; // 방장 ID
+  status: RoomStatus;
   settings: {
     handicap: string; // (몇점)접바둑 (0이면 호선(덤 6.5집)이고 komi 설정값은 '0'으로 입력됨)
     komi: string; // 덤 (흑 기준)
