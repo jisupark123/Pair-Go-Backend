@@ -9,8 +9,8 @@ importers:
   .:
     dependencies:
       '@dodagames/go':
-        specifier: ^1.0.5
-        version: 1.0.5
+        specifier: ^1.0.7
+        version: 1.0.7
       '@nestjs/axios':
         specifier: ^4.0.1
         version: 4.0.1(@nestjs/common@11.1.10(class-transformer@0.5.1)(class-validator@0.14.3)(reflect-metadata@0.2.2)(rxjs@7.8.2))(axios@1.13.2)(rxjs@7.8.2)
@@ -393,8 +393,8 @@ packages:
     resolution: {integrity: sha512-IchNf6dN4tHoMFIn/7OE8LWZ19Y6q/67Bmf6vnGREv8RSbBVb9LPJxEcnwrcwX6ixSvaiGoomAUvu4YSxXrVgw==}
     engines: {node: '>=12'}
 
-  '@dodagames/go@1.0.5':
-    resolution: {integrity: sha512-2jwv7U4TpPnk5oXeS3gmr3bqwXOrvmglMIAe7RFUaWpf2PkET63hwteoTbNNBSS0SQPENxHogEwZ0nW1G8kYPw==, tarball: https://npm.pkg.github.com/download/@dodagames/go/1.0.5/36cb79ad2ebd239afbb1df8723dedf237311e655}
+  '@dodagames/go@1.0.7':
+    resolution: {integrity: sha512-4cw7h1AMnycXNBrU61rlDwoW6NGgxc7Ts5H1pV7W0cWQ13WladAnoaaXMMwzvPrEfiK2XH6dp7UXGpKFySwpsg==, tarball: https://npm.pkg.github.com/download/@dodagames/go/1.0.7/1d13a2699403c1fe6fce10339d0bb93e069d69fa}
 
   '@electric-sql/pglite-socket@0.0.6':
     resolution: {integrity: sha512-6RjmgzphIHIBA4NrMGJsjNWK4pu+bCWJlEWlwcxFTVY3WT86dFpKwbZaGWZV6C5Rd7sCk1Z0CI76QEfukLAUXw==}
@@ -4422,7 +4422,7 @@ snapshots:
     dependencies:
       '@jridgewell/trace-mapping': 0.3.9
 
-  '@dodagames/go@1.0.5':
+  '@dodagames/go@1.0.7':
     dependencies:
       '@dodagames/go': 'link:'
       react: 19.2.3

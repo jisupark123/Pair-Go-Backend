@@ -1,4 +1,4 @@
-import { SequenceHistory } from '@dodagames/go';
+import { Game, type StoneColor } from '@dodagames/go';
 
 import { TurnManager } from '@/game/turnManager';
 import { Player, Room, Team } from '@/rooms/rooms.interface';
@@ -13,18 +13,17 @@ export interface TimeControl {
 /** 게임 팀 */
 export interface GameTeam {
   teamColor: Team; // 팀 구분 ('red' | 'blue')
-  stoneColor: 'black' | 'white'; // 돌 색상 ('black' | 'white')
+  stoneColor: StoneColor; // 돌 색상
   players: {
     data: Player;
     index: number;
   }[];
-  capturedStoneCount: number; // 따낸 돌의 수
   timeControl: TimeControl; // 시간 제어 상태
 }
 
 /** 현재 턴 정보 */
 export interface CurrentTurn {
-  stoneColor: 'black' | 'white'; // 현재 돌 색상
+  stoneColor: StoneColor; // 현재 돌 색상
   playerIndex: number; // 현재 팀 내 플레이어 인덱스 (0 또는 1)
 }
 
@@ -42,5 +41,10 @@ export interface GameInstance {
   get currentTurn(): CurrentTurn; // 편의를 위한 게터
 
   startedAt: Date; // 게임 시작 시간
-  sequenceHistory: SequenceHistory; // 수순 기록
+  gameData: Game; // 대국 데이터
+}
+
+/** 프론트엔드 전송용 게임 인스턴스 */
+export interface SerializedGameInstance extends Omit<GameInstance, 'turnManager' | 'gameData'> {
+  gameData: ReturnType<Game['toJSON']>;
 }

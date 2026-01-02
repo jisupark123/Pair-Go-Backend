@@ -1,7 +1,7 @@
-import { Board, SequenceHistory } from '@dodagames/go';
-import { Injectable } from '@nestjs/common';
+import { Board, Coordinate, Game, MoveProcessorFactory, SequenceHistory } from '@dodagames/go';
+import { Injectable, NotFoundException } from '@nestjs/common';
 
-import { GameInstance } from '@/game/game.interface';
+import { GameInstance, SerializedGameInstance } from '@/game/game.interface';
 import { TurnManagerImpl } from '@/game/turnManager';
 import { Room } from '@/rooms/rooms.interface';
 
@@ -42,22 +42,20 @@ export class GameService {
       teams: [
         {
           teamColor: isRedBlack ? 'red' : 'blue',
-          stoneColor: isRedBlack ? 'black' : 'white',
+          stoneColor: isRedBlack ? 'BLACK' : 'WHITE',
           players: [
             { data: isRedBlack ? redPlayers[0] : bluePlayers[0], index: 0 },
             { data: isRedBlack ? redPlayers[1] : bluePlayers[1], index: 1 },
           ],
-          capturedStoneCount: 0,
           timeControl: { ...timeControlConfig },
         },
         {
           teamColor: isRedBlack ? 'blue' : 'red',
-          stoneColor: isRedBlack ? 'white' : 'black',
+          stoneColor: isRedBlack ? 'WHITE' : 'BLACK',
           players: [
             { data: isRedBlack ? bluePlayers[0] : redPlayers[0], index: 0 },
             { data: isRedBlack ? bluePlayers[1] : redPlayers[1], index: 1 },
           ],
-          capturedStoneCount: 0,
           timeControl: { ...timeControlConfig },
         },
       ],
@@ -66,11 +64,45 @@ export class GameService {
         return this.turnManager.currentTurn;
       },
       startedAt: new Date(),
-      sequenceHistory: SequenceHistory.fromInitialBoard(new Board(19)),
+      gameData: new Game(
+        SequenceHistory.fromInitialBoard(new Board(19)),
+        'BLACK',
+        handicap,
+        0,
+        0,
+        MoveProcessorFactory.standardRule(),
+      ),
     };
-
     this.games.set(room.id, newGame);
     return newGame;
+  }
+
+  processMove(gameId: string, socketId: string, y: number, x: number): GameInstance | null {
+    const gameInstance = this.getGame(gameId);
+
+    const { stoneColor, playerIndex } = gameInstance.currentTurn;
+    const currentTeam = gameInstance.teams.find((t) => t.stoneColor === stoneColor);
+
+    if (!currentTeam) {
+      return null;
+    }
+
+    const currentPlayer = currentTeam.players[playerIndex];
+
+    if (currentPlayer.data.socketId !== socketId) {
+      return null;
+    }
+
+    const newGame = gameInstance.gameData.playMove(new Coordinate(y, x));
+
+    if (!newGame) {
+      return null;
+    }
+
+    gameInstance.gameData = newGame;
+    this.switchTurn(gameId);
+
+    return gameInstance;
   }
 
   /**
@@ -85,9 +117,23 @@ export class GameService {
   getGame(roomId: string): GameInstance {
     const game = this.games.get(roomId);
     if (!game) {
-      throw new Error('진행 중인 게임을 찾을 수 없습니다.');
+      throw new NotFoundException('진행 중인 게임을 찾을 수 없습니다.');
     }
     return game;
+  }
+
+  /**
+   * 프론트엔드로 전송하기 위해 GameInstance를 직렬화합니다.
+   * turnManager는 제외되고, gameData는 JSON으로 변환됩니다.
+   */
+  serializeGame(game: GameInstance): SerializedGameInstance {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { turnManager, gameData, ...rest } = game;
+    return {
+      ...rest,
+      gameData: gameData.toJSON(),
+      currentTurn: game.currentTurn,
+    };
   }
 
   // 게임 종료 시 호출

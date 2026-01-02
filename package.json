@@ -26,7 +26,7 @@
     "*.{js,ts,jsx,tsx}": "eslint"
   },
   "dependencies": {
-    "@dodagames/go": "^1.0.5",
+    "@dodagames/go": "^1.0.7",
     "@nestjs/axios": "^4.0.1",
     "@nestjs/common": "^11.0.1",
     "@nestjs/config": "^4.0.2",

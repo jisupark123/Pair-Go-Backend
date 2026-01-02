@@ -22,18 +22,18 @@ export class TurnManagerImpl implements TurnManager {
     if (options.isHandicap) {
       // 접바둑: 백1 -> 흑1 -> 백2 -> 흑2
       this.cycle = [
-        { stoneColor: 'white', playerIndex: 0 },
-        { stoneColor: 'black', playerIndex: 0 },
-        { stoneColor: 'white', playerIndex: 1 },
-        { stoneColor: 'black', playerIndex: 1 },
+        { stoneColor: 'WHITE', playerIndex: 0 },
+        { stoneColor: 'BLACK', playerIndex: 0 },
+        { stoneColor: 'WHITE', playerIndex: 1 },
+        { stoneColor: 'BLACK', playerIndex: 1 },
       ];
     } else {
       // 호선: 흑1 -> 백1 -> 흑2 -> 백2
       this.cycle = [
-        { stoneColor: 'black', playerIndex: 0 },
-        { stoneColor: 'white', playerIndex: 0 },
-        { stoneColor: 'black', playerIndex: 1 },
-        { stoneColor: 'white', playerIndex: 1 },
+        { stoneColor: 'BLACK', playerIndex: 0 },
+        { stoneColor: 'WHITE', playerIndex: 0 },
+        { stoneColor: 'BLACK', playerIndex: 1 },
+        { stoneColor: 'WHITE', playerIndex: 1 },
       ];
     }
 
