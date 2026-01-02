@@ -1,6 +1,4 @@
-import { AuthenticatedSocket, DeviceType } from '@/socket/socket.interface';
-
-export type { AuthenticatedSocket, DeviceType };
+import { DeviceType } from '@/socket/socket.interface';
 
 export type Team = 'red' | 'blue';
 

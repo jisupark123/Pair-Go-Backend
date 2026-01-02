@@ -179,6 +179,24 @@ export class RoomsGateway implements OnGatewayDisconnect {
     }
   }
 
+  @SubscribeMessage('startGame')
+  handleStartGame(client: AuthenticatedSocket, payload: { roomId: string }) {
+    const { user } = client.data;
+    if (!user) {
+      throw new WsException('Unauthorized');
+    }
+
+    try {
+      const { roomId } = payload;
+      const updatedRoom = this.roomsService.startGame(roomId, user.id);
+
+      this.emitToRoom(roomId, 'gameStart', updatedRoom);
+      return { success: true };
+    } catch (error) {
+      throw new WsException(error.message);
+    }
+  }
+
   // Helper method to log and emit
   private emitToRoom(roomId: string, event: string, data: unknown) {
     this.logger.log(`Emitting '${event}' to room ${roomId}`);

@@ -1,13 +1,17 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { nanoid } from 'nanoid';
 
+import { GameService } from '@/game/game.service';
 import { CreateRoomDto } from '@/rooms/dto/create-room.dto';
-import { DeviceType, Room } from '@/rooms/rooms.interface';
+import { Room } from '@/rooms/rooms.interface';
+import { DeviceType } from '@/socket/socket.interface';
 
 @Injectable()
 export class RoomsService {
   private rooms: Map<string, Room> = new Map();
   private cleanupTimers: Map<string, NodeJS.Timeout> = new Map();
+
+  constructor(private readonly gameService: GameService) {}
 
   createRoom(hostId: number, createRoomDto: CreateRoomDto): Room {
     const roomId = nanoid(6); // 6자리 초대 코드 생성
@@ -199,6 +203,38 @@ export class RoomsService {
     room.hostId = newHostId;
     newHost.isReady = true; // 방장은 항상 준비 상태
 
+    return room;
+  }
+
+  startGame(roomId: string, userId: number) {
+    const room = this.getRoom(roomId);
+
+    if (room.hostId !== userId) {
+      throw new Error('방장만 게임을 시작할 수 있습니다.');
+    }
+
+    if (room.status === 'playing') {
+      throw new Error('이미 게임이 진행 중입니다.');
+    }
+
+    if (room.players.length !== 4) {
+      throw new Error('게임 시작을 위해서는 4명의 플레이어가 필요합니다.');
+    }
+
+    const allReady = room.players.every((p) => p.isReady);
+    if (!allReady) {
+      throw new Error('모든 플레이어가 준비되어야 합니다.');
+    }
+
+    const redTeamCount = room.players.filter((p) => p.team === 'red').length;
+    if (redTeamCount !== 2) {
+      throw new Error('팀 구성이 균형 맞지 않습니다 (2:2).');
+    }
+
+    // 게임 인스턴스 생성
+    this.gameService.createGame(room);
+
+    room.status = 'playing';
     return room;
   }
 }

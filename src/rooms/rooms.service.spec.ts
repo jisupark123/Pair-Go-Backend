@@ -1,19 +1,32 @@
 import { NotFoundException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 
+import { GameService } from '@/game/game.service';
 import { CreateRoomDto } from '@/rooms/dto/create-room.dto';
-import { DeviceType, Room } from '@/rooms/rooms.interface';
+import { Room } from '@/rooms/rooms.interface';
 import { RoomsService } from '@/rooms/rooms.service';
+import { DeviceType } from '@/socket/socket.interface';
 
 describe('RoomsService', () => {
   let service: RoomsService;
+  let gameService: GameService;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
-      providers: [RoomsService],
+      providers: [
+        RoomsService,
+        {
+          provide: GameService,
+          useValue: {
+            createGame: jest.fn(),
+            getGame: jest.fn(),
+          },
+        },
+      ],
     }).compile();
 
     service = module.get<RoomsService>(RoomsService);
+    gameService = module.get<GameService>(GameService);
   });
 
   it('서비스가 정의되어 있어야 함', () => {
@@ -418,6 +431,82 @@ describe('RoomsService', () => {
 
     it('대상 유저가 방에 없으면 NotFoundException을 던져야 함', () => {
       expect(() => service.kickPlayer(roomId, hostId, 999)).toThrow(NotFoundException);
+    });
+  });
+
+  describe('startGame (게임 시작)', () => {
+    let roomId: string;
+    const hostId = 1;
+
+    beforeEach(() => {
+      roomId = service.createRoom(hostId, {} as CreateRoomDto).id;
+      service.addPlayerToRoom(roomId, {
+        id: 1,
+        nickname: 'Host',
+        socketId: 's1',
+        deviceType: 'desktop' as DeviceType,
+      });
+    });
+
+    it('모든 조건이 충족되면 게임을 시작해야 함', () => {
+      // 추가 플레이어 3명 입장 (총 4명)
+      service.addPlayerToRoom(roomId, {
+        id: 2,
+        nickname: 'P2',
+        socketId: 's2',
+        deviceType: 'desktop' as DeviceType,
+      });
+      service.addPlayerToRoom(roomId, {
+        id: 3,
+        nickname: 'P3',
+        socketId: 's3',
+        deviceType: 'desktop' as DeviceType,
+      });
+      service.addPlayerToRoom(roomId, {
+        id: 4,
+        nickname: 'P4',
+        socketId: 's4',
+        deviceType: 'desktop' as DeviceType,
+      });
+
+      // 전원 준비 (방장은 이미 준비됨)
+      service.updatePlayerStatus(roomId, 's2', true);
+      service.updatePlayerStatus(roomId, 's3', true);
+      service.updatePlayerStatus(roomId, 's4', true);
+
+      // 게임 시작
+      const room = service.startGame(roomId, hostId);
+
+      expect(room.status).toBe('playing');
+      expect(gameService.createGame).toHaveBeenCalledWith(room);
+    });
+
+    it('인원이 부족하면 에러를 던져야 함', () => {
+      expect(() => service.startGame(roomId, hostId)).toThrow('4명의 플레이어');
+    });
+
+    it('준비되지 않은 플레이어가 있으면 에러를 던져야 함', () => {
+      service.addPlayerToRoom(roomId, {
+        id: 2,
+        nickname: 'P2',
+        socketId: 's2',
+        deviceType: 'desktop' as DeviceType,
+      });
+      service.addPlayerToRoom(roomId, {
+        id: 3,
+        nickname: 'P3',
+        socketId: 's3',
+        deviceType: 'desktop' as DeviceType,
+      });
+      service.addPlayerToRoom(roomId, {
+        id: 4,
+        nickname: 'P4',
+        socketId: 's4',
+        deviceType: 'desktop' as DeviceType,
+      });
+      // 준비 상태 업데이트 안 함
+
+      expect(() => service.startGame(roomId, hostId)).toThrow('모든 플레이어');
     });
   });
 });

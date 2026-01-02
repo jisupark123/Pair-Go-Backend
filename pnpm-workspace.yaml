@@ -1,5 +1,7 @@
 onlyBuiltDependencies:
+  - '@dodagames/go'
   - '@nestjs/core'
   - '@prisma/engines'
+  - '@scarf/scarf'
   - prisma
   - unrs-resolver

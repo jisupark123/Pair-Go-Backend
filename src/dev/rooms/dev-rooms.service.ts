@@ -2,8 +2,8 @@ import { Injectable } from '@nestjs/common';
 import { nanoid } from 'nanoid';
 
 import { RoomsGateway } from '@/rooms/rooms.gateway';
-import { DeviceType } from '@/rooms/rooms.interface';
 import { RoomsService } from '@/rooms/rooms.service';
+import { DeviceType } from '@/socket/socket.interface';
 
 @Injectable()
 export class DevRoomsService {

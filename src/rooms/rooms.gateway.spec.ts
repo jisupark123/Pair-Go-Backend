@@ -46,6 +46,7 @@ describe('RoomsGateway', () => {
             updateRoomSettings: jest.fn(),
             changeTeam: jest.fn(),
             kickPlayer: jest.fn(),
+            startGame: jest.fn(),
           },
         },
       ],
@@ -128,7 +129,16 @@ describe('RoomsGateway', () => {
       // Mock return values ensuring they return a room object
       (roomsService.updatePlayerStatus as jest.Mock).mockReturnValue(mockRoom);
       (roomsService.updateRoomSettings as jest.Mock).mockReturnValue(mockRoom);
+      (roomsService.updateRoomSettings as jest.Mock).mockReturnValue(mockRoom);
       (roomsService.changeTeam as jest.Mock).mockReturnValue(mockRoom);
+      (roomsService.startGame as jest.Mock).mockReturnValue({ ...mockRoom, status: 'playing' });
+    });
+
+    it('startGame: 서비스 호출 및 gameStart 이벤트 전송', () => {
+      gateway.handleStartGame(client, { roomId });
+      expect(roomsService.startGame).toHaveBeenCalledWith(roomId, mockUser.id);
+      expect(server.to).toHaveBeenCalledWith(roomId);
+      expect(server.emit).toHaveBeenCalledWith('gameStart', expect.anything());
     });
 
     it('updateReadyStatus: 서비스 호출 및 roomUpdate 이벤트 전파 확인', () => {

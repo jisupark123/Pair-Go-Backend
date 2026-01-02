@@ -8,6 +8,9 @@ importers:
 
   .:
     dependencies:
+      '@dodagames/go':
+        specifier: ^1.0.5
+        version: 1.0.5
       '@nestjs/axios':
         specifier: ^4.0.1
         version: 4.0.1(@nestjs/common@11.1.10(class-transformer@0.5.1)(class-validator@0.14.3)(reflect-metadata@0.2.2)(rxjs@7.8.2))(axios@1.13.2)(rxjs@7.8.2)
@@ -389,6 +392,9 @@ packages:
   '@cspotcode/source-map-support@0.8.1':
     resolution: {integrity: sha512-IchNf6dN4tHoMFIn/7OE8LWZ19Y6q/67Bmf6vnGREv8RSbBVb9LPJxEcnwrcwX6ixSvaiGoomAUvu4YSxXrVgw==}
     engines: {node: '>=12'}
+
+  '@dodagames/go@1.0.5':
+    resolution: {integrity: sha512-2jwv7U4TpPnk5oXeS3gmr3bqwXOrvmglMIAe7RFUaWpf2PkET63hwteoTbNNBSS0SQPENxHogEwZ0nW1G8kYPw==, tarball: https://npm.pkg.github.com/download/@dodagames/go/1.0.5/36cb79ad2ebd239afbb1df8723dedf237311e655}
 
   '@electric-sql/pglite-socket@0.0.6':
     resolution: {integrity: sha512-6RjmgzphIHIBA4NrMGJsjNWK4pu+bCWJlEWlwcxFTVY3WT86dFpKwbZaGWZV6C5Rd7sCk1Z0CI76QEfukLAUXw==}
@@ -4415,6 +4421,12 @@ snapshots:
   '@cspotcode/source-map-support@0.8.1':
     dependencies:
       '@jridgewell/trace-mapping': 0.3.9
+
+  '@dodagames/go@1.0.5':
+    dependencies:
+      '@dodagames/go': 'link:'
+      react: 19.2.3
+      react-dom: 19.2.3(react@19.2.3)
 
   '@electric-sql/pglite-socket@0.0.6(@electric-sql/pglite@0.3.2)':
     dependencies:
