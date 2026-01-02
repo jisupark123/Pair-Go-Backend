@@ -38,7 +38,10 @@ export class RoomsService {
   }
 
   // Socket Gateway에서 사용할 메서드들
-  addPlayerToRoom(roomId: string, player: { id: number; nickname: string; socketId: string; deviceType: DeviceType }) {
+  addPlayerToRoom(
+    roomId: string,
+    player: { id: number; nickname: string; socketId: string; deviceType: DeviceType; isAi: boolean },
+  ) {
     // 삭제 대기 중인 방이라면 삭제 취소 및 상태 변경
     if (this.cleanupTimers.has(roomId)) {
       clearTimeout(this.cleanupTimers.get(roomId));

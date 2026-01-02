@@ -87,7 +87,7 @@ describe('RoomsService', () => {
     });
 
     it('방이 가득 차지 않았으면 플레이어를 추가해야 함', () => {
-      const player = { id: 1, nickname: 'Host', socketId: 's1', deviceType: 'desktop' as DeviceType };
+      const player = { id: 1, nickname: 'Host', socketId: 's1', deviceType: 'desktop' as DeviceType, isAi: false };
       const room = service.addPlayerToRoom(roomId, player);
 
       expect(room.players).toHaveLength(1);
@@ -95,7 +95,7 @@ describe('RoomsService', () => {
     });
 
     it('방장이면 준비 상태(isReady)가 true로 설정되어야 함', () => {
-      const player = { id: hostId, nickname: 'Host', socketId: 's1', deviceType: 'desktop' as DeviceType };
+      const player = { id: hostId, nickname: 'Host', socketId: 's1', deviceType: 'desktop' as DeviceType, isAi: false };
       const room = service.addPlayerToRoom(roomId, player);
       expect(room.players[0].isReady).toBe(true);
     });
@@ -107,10 +107,11 @@ describe('RoomsService', () => {
         nickname: 'Host',
         socketId: 's1',
         deviceType: 'desktop' as DeviceType,
+        isAi: false,
       });
 
       // 일반 플레이어 추가
-      const guest = { id: 2, nickname: 'Guest', socketId: 's2', deviceType: 'mobile' as DeviceType };
+      const guest = { id: 2, nickname: 'Guest', socketId: 's2', deviceType: 'mobile' as DeviceType, isAi: false };
       const room = service.addPlayerToRoom(roomId, guest);
 
       const addedGuest = room.players.find((p) => p.id === 2);
@@ -124,6 +125,7 @@ describe('RoomsService', () => {
           nickname: `User${i}`,
           socketId: `s${i}`,
           deviceType: 'desktop' as DeviceType,
+          isAi: false,
         });
       }
 
@@ -133,6 +135,7 @@ describe('RoomsService', () => {
           nickname: 'User5',
           socketId: 's5',
           deviceType: 'desktop' as DeviceType,
+          isAi: false,
         });
       }).toThrow('방이 가득 찼습니다.');
     });
@@ -143,6 +146,7 @@ describe('RoomsService', () => {
         nickname: 'User1',
         socketId: 's1',
         deviceType: 'desktop' as DeviceType,
+        isAi: false,
       });
       expect(() => {
         service.addPlayerToRoom(roomId, {
@@ -150,6 +154,7 @@ describe('RoomsService', () => {
           nickname: 'User1',
           socketId: 's2',
           deviceType: 'desktop' as DeviceType,
+          isAi: false,
         });
       }).toThrow('이미 방에 참가 중입니다.');
     });
@@ -160,19 +165,37 @@ describe('RoomsService', () => {
         nickname: 'P1',
         socketId: 's1',
         deviceType: 'desktop' as DeviceType,
+        isAi: false,
       });
       service.addPlayerToRoom(roomId, {
         id: 2,
         nickname: 'P2',
         socketId: 's2',
         deviceType: 'desktop' as DeviceType,
+        isAi: false,
       });
 
       // 수동으로 팀을 조작하여 2v1 상황 시뮬레이션
       const room = service.getRoom(roomId);
       room.players = [
-        { id: 10, nickname: 'A', socketId: 'sa', isReady: true, team: 'red', deviceType: 'desktop' as DeviceType },
-        { id: 11, nickname: 'B', socketId: 'sb', isReady: true, team: 'red', deviceType: 'desktop' as DeviceType },
+        {
+          id: 10,
+          nickname: 'A',
+          socketId: 'sa',
+          isReady: true,
+          team: 'red',
+          deviceType: 'desktop' as DeviceType,
+          isAi: false,
+        },
+        {
+          id: 11,
+          nickname: 'B',
+          socketId: 'sb',
+          isReady: true,
+          team: 'red',
+          deviceType: 'desktop' as DeviceType,
+          isAi: false,
+        },
       ];
 
       // 다음 플레이어는 반드시 블루팀이어야 함
@@ -181,6 +204,7 @@ describe('RoomsService', () => {
         nickname: 'C',
         socketId: 'sc',
         deviceType: 'desktop' as DeviceType,
+        isAi: false,
       });
       const p3 = r3.players.find((p) => p.id === 12);
       expect(p3?.team).toBe('blue');
@@ -190,7 +214,13 @@ describe('RoomsService', () => {
       jest.useFakeTimers();
 
       // 테스트를 위해 플레이어 추가
-      service.addPlayerToRoom(roomId, { id: 1, nickname: 'Host', socketId: 's1', deviceType: 'desktop' as DeviceType });
+      service.addPlayerToRoom(roomId, {
+        id: 1,
+        nickname: 'Host',
+        socketId: 's1',
+        deviceType: 'desktop' as DeviceType,
+        isAi: false,
+      });
 
       // 방 비우기
       service.removePlayerFromRoom(roomId, 's1'); // 여기서 deleting 상태 및 타이머 시작
@@ -207,7 +237,8 @@ describe('RoomsService', () => {
         id: 1,
         nickname: 'Host',
         socketId: 's1-new',
-        deviceType: 'desktop',
+        deviceType: 'desktop' as DeviceType,
+        isAi: false,
       });
 
       const recoveredRoom = service.getRoom(roomId);
@@ -233,12 +264,14 @@ describe('RoomsService', () => {
         nickname: 'Host',
         socketId: 's1',
         deviceType: 'desktop' as DeviceType,
+        isAi: false,
       });
       service.addPlayerToRoom(roomId, {
         id: 2,
         nickname: 'Guest',
         socketId: 's2',
         deviceType: 'desktop' as DeviceType,
+        isAi: false,
       });
     });
 
@@ -291,12 +324,19 @@ describe('RoomsService', () => {
     beforeEach(() => {
       const room = service.createRoom(1, {} as CreateRoomDto);
       roomId = room.id;
-      service.addPlayerToRoom(roomId, { id: 1, nickname: 'Host', socketId: 's1', deviceType: 'desktop' as DeviceType });
+      service.addPlayerToRoom(roomId, {
+        id: 1,
+        nickname: 'Host',
+        socketId: 's1',
+        deviceType: 'desktop' as DeviceType,
+        isAi: false,
+      });
       service.addPlayerToRoom(roomId, {
         id: 2,
         nickname: 'Guest',
         socketId: 's2',
         deviceType: 'desktop' as DeviceType,
+        isAi: false,
       });
     });
 
@@ -349,12 +389,19 @@ describe('RoomsService', () => {
 
     beforeEach(() => {
       roomId = service.createRoom(1, {} as CreateRoomDto).id;
-      service.addPlayerToRoom(roomId, { id: 1, nickname: 'Host', socketId: 's1', deviceType: 'desktop' as DeviceType });
+      service.addPlayerToRoom(roomId, {
+        id: 1,
+        nickname: 'Host',
+        socketId: 's1',
+        deviceType: 'desktop' as DeviceType,
+        isAi: false,
+      });
       service.addPlayerToRoom(roomId, {
         id: 2,
         nickname: 'Guest',
         socketId: 's2',
         deviceType: 'desktop' as DeviceType,
+        isAi: false,
       });
     });
 
@@ -384,6 +431,7 @@ describe('RoomsService', () => {
         nickname: 'Guest3',
         socketId: 's3',
         deviceType: 'desktop' as DeviceType,
+        isAi: false,
       });
       expect(() => service.changeTeam(roomId, 2, 3)).toThrow('권한이 없습니다.'); // 일반 유저가 타인 변경 시도
     });
@@ -404,12 +452,14 @@ describe('RoomsService', () => {
         nickname: 'Host',
         socketId: 's1',
         deviceType: 'desktop' as DeviceType,
+        isAi: false,
       });
       service.addPlayerToRoom(roomId, {
         id: 2,
         nickname: 'Guest',
         socketId: 's2',
         deviceType: 'desktop' as DeviceType,
+        isAi: false,
       });
     });
 
@@ -445,6 +495,7 @@ describe('RoomsService', () => {
         nickname: 'Host',
         socketId: 's1',
         deviceType: 'desktop' as DeviceType,
+        isAi: false,
       });
     });
 
@@ -455,18 +506,21 @@ describe('RoomsService', () => {
         nickname: 'P2',
         socketId: 's2',
         deviceType: 'desktop' as DeviceType,
+        isAi: false,
       });
       service.addPlayerToRoom(roomId, {
         id: 3,
         nickname: 'P3',
         socketId: 's3',
         deviceType: 'desktop' as DeviceType,
+        isAi: false,
       });
       service.addPlayerToRoom(roomId, {
         id: 4,
         nickname: 'P4',
         socketId: 's4',
         deviceType: 'desktop' as DeviceType,
+        isAi: false,
       });
 
       // 전원 준비 (방장은 이미 준비됨)
@@ -491,18 +545,21 @@ describe('RoomsService', () => {
         nickname: 'P2',
         socketId: 's2',
         deviceType: 'desktop' as DeviceType,
+        isAi: false,
       });
       service.addPlayerToRoom(roomId, {
         id: 3,
         nickname: 'P3',
         socketId: 's3',
         deviceType: 'desktop' as DeviceType,
+        isAi: false,
       });
       service.addPlayerToRoom(roomId, {
         id: 4,
         nickname: 'P4',
         socketId: 's4',
         deviceType: 'desktop' as DeviceType,
+        isAi: false,
       });
       // 준비 상태 업데이트 안 함
 

@@ -9,6 +9,7 @@ export type Player = {
   isReady: boolean;
   team: Team;
   deviceType: DeviceType;
+  isAi: boolean;
 };
 
 export type RoomStatus = 'waiting' | 'playing' | 'deleting';

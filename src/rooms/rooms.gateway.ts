@@ -59,6 +59,7 @@ export class RoomsGateway implements OnGatewayDisconnect {
         nickname: user.nickname,
         socketId: client.id,
         deviceType,
+        isAi: false,
       });
 
       client.join(roomId);

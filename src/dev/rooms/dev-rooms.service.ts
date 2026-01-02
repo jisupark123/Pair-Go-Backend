@@ -13,7 +13,8 @@ export class DevRoomsService {
   ) {}
 
   addVirtualPlayers(roomId: string, count: number) {
-    const addedPlayers: { id: number; nickname: string; socketId: string; deviceType: DeviceType }[] = [];
+    const addedPlayers: { id: number; nickname: string; socketId: string; deviceType: DeviceType; isAi: boolean }[] =
+      [];
     const room = this.roomsService.getRoom(roomId);
 
     if (!room) {
@@ -31,6 +32,7 @@ export class DevRoomsService {
         nickname: `Bot_${nanoid(4)}`,
         socketId: `virt_sock_${nanoid(6)}`,
         deviceType: randomDevice,
+        isAi: true,
       };
 
       try {

@@ -91,6 +91,7 @@ describe('RoomsGateway', () => {
         nickname: mockUser.nickname,
         socketId: client.id,
         deviceType: 'desktop',
+        isAi: false,
       });
       expect(client.join).toHaveBeenCalledWith(roomId);
       expect(client.data['roomId']).toBe(roomId);
