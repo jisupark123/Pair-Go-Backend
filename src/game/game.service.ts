@@ -1,8 +1,8 @@
 import { Board, SequenceHistory } from '@dodagames/go';
 import { Injectable } from '@nestjs/common';
 
+import { GameInstance } from '@/game/game.interface';
 import { TurnManagerImpl } from '@/game/turnManager';
-import { GameInstance } from '@/game/types';
 import { Room } from '@/rooms/rooms.interface';
 
 @Injectable()

@@ -1,4 +1,4 @@
-import { CurrentTurn } from '@/game/types';
+import { CurrentTurn } from '@/game/game.interface';
 
 /** 턴 관리자 인터페이스 */
 export interface TurnManager {
