@@ -3,6 +3,9 @@ import { WsException } from '@nestjs/websockets';
 import { User } from '@prisma/client';
 import { Namespace, Socket } from 'socket.io';
 
+import { GameGateway } from '@/game/game.gateway';
+import { GameInstance } from '@/game/game.interface';
+import { GameService } from '@/game/game.service';
 import { RoomsGateway } from '@/rooms/rooms.gateway';
 import { Room } from '@/rooms/rooms.interface';
 import { RoomsService } from '@/rooms/rooms.service';
@@ -30,6 +33,8 @@ const mockRoom = {
 describe('RoomsGateway', () => {
   let gateway: RoomsGateway;
   let roomsService: RoomsService;
+  let gameGateway: GameGateway;
+  let gameService: GameService;
   let server: Namespace;
 
   beforeEach(async () => {
@@ -49,11 +54,26 @@ describe('RoomsGateway', () => {
             startGame: jest.fn(),
           },
         },
+        {
+          provide: GameGateway,
+          useValue: {
+            handleAiTurns: jest.fn(),
+          },
+        },
+        {
+          provide: GameService,
+          useValue: {
+            getGame: jest.fn(),
+            createGame: jest.fn(),
+          },
+        },
       ],
     }).compile();
 
     gateway = module.get<RoomsGateway>(RoomsGateway);
     roomsService = module.get<RoomsService>(RoomsService);
+    gameGateway = module.get<GameGateway>(GameGateway);
+    gameService = module.get<GameService>(GameService);
 
     // Mock Server (Namespace)
     server = {
@@ -135,11 +155,26 @@ describe('RoomsGateway', () => {
       (roomsService.startGame as jest.Mock).mockReturnValue({ ...mockRoom, status: 'playing' });
     });
 
-    it('startGame: 서비스 호출 및 gameStart 이벤트 전송', () => {
-      gateway.handleStartGame(client, { roomId });
+    it('startGame: 서비스 호출 및 gameStart 이벤트 전송, AI 턴 쳐리', async () => {
+      // GameService, GameGateway 모킹
+      const mockGameInstance = {
+        id: roomId,
+        players: [],
+        settings: {},
+        teams: [],
+        currentTurn: {},
+      } as unknown as GameInstance;
+      (gameService.getGame as jest.Mock).mockReturnValue(mockGameInstance);
+
+      await gateway.handleStartGame(client, { roomId });
+
       expect(roomsService.startGame).toHaveBeenCalledWith(roomId, mockUser.id);
       expect(server.to).toHaveBeenCalledWith(roomId);
       expect(server.emit).toHaveBeenCalledWith('gameStart', expect.anything());
+
+      // AI 턴 체크 확인
+      expect(gameService.getGame).toHaveBeenCalledWith(roomId);
+      expect(gameGateway.handleAiTurns).toHaveBeenCalledWith(mockGameInstance);
     });
 
     it('updateReadyStatus: 서비스 호출 및 roomUpdate 이벤트 전파 확인', () => {

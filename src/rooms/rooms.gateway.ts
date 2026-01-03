@@ -10,6 +10,8 @@ import { Namespace } from 'socket.io'; // Server is kept for afterInit type
 
 import { GLOBAL_SOCKET_NAMESPACE, SOCKET_CORS_OPTIONS } from '@/common/constants/socket.constant';
 import { SocketLoggingInterceptor } from '@/common/interceptors/socket-logging.interceptor';
+import { GameGateway } from '@/game/game.gateway';
+import { GameService } from '@/game/game.service';
 import { Room } from '@/rooms/rooms.interface'; // AuthenticatedSocket moved
 import { RoomsService } from '@/rooms/rooms.service';
 import type { AuthenticatedSocket } from '@/socket/socket.interface';
@@ -25,7 +27,11 @@ export class RoomsGateway implements OnGatewayDisconnect {
 
   private logger = new Logger('RoomsGateway');
 
-  constructor(private readonly roomsService: RoomsService) {}
+  constructor(
+    private readonly roomsService: RoomsService,
+    private readonly gameService: GameService,
+    private readonly gameGateway: GameGateway,
+  ) {}
 
   handleDisconnect(client: AuthenticatedSocket) {
     this.logger.log(`Client disconnected: ${client.id}`);
@@ -181,7 +187,7 @@ export class RoomsGateway implements OnGatewayDisconnect {
   }
 
   @SubscribeMessage('startGame')
-  handleStartGame(client: AuthenticatedSocket, payload: { roomId: string }) {
+  async handleStartGame(client: AuthenticatedSocket, payload: { roomId: string }) {
     const { user } = client.data;
     if (!user) {
       throw new WsException('Unauthorized');
@@ -192,6 +198,11 @@ export class RoomsGateway implements OnGatewayDisconnect {
       const updatedRoom = this.roomsService.startGame(roomId, user.id);
 
       this.emitToRoom(roomId, 'gameStart', updatedRoom);
+
+      // 첫 턴이 AI일 경우 처리
+      const gameInstance = this.gameService.getGame(roomId);
+      await this.gameGateway.handleAiTurns(gameInstance);
+
       return { success: true };
     } catch (error) {
       throw new WsException(error.message);
