@@ -23,13 +23,15 @@ async function bootstrap() {
     .setDescription('The Pair Go API description')
     .setVersion('1.0')
     .addCookieAuth('accessToken')
+    .addServer('http://3.36.107.34:3000', 'Deployed Server')
+    .addServer('http://localhost:3000', 'Local Server')
     .build();
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('docs', app, document);
 
   app.use(cookieParser());
   app.enableCors({
-    origin: ['http://localhost:5173', 'https://pair-go-frontend.vercel.app'],
+    origin: ['http://localhost:5173', 'https://pair-go-frontend.vercel.app', 'http://localhost:3000'],
     credentials: true,
   });
   await app.listen(process.env.PORT ?? 3000);
