@@ -55,8 +55,13 @@ export class RoomsService {
 
     const room = this.getRoom(roomId);
 
-    if (room.players.some((p) => p.id === player.id)) {
-      throw new Error('이미 방에 참가 중입니다.');
+    const existingPlayer = room.players.find((p) => p.id === player.id);
+    if (existingPlayer) {
+      // 이미 참가 중인 경우 소켓 ID 및 정보 업데이트 (새로고침/재접속 대응)
+      existingPlayer.socketId = player.socketId;
+      existingPlayer.deviceType = player.deviceType;
+      // 기존 플레이어 객체가 업데이트된 상태로 방 반환
+      return room;
     }
 
     if (room.players.length >= 4) {

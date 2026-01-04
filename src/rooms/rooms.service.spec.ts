@@ -140,7 +140,7 @@ describe('RoomsService', () => {
       }).toThrow('방이 가득 찼습니다.');
     });
 
-    it('이미 입장한 유저 ID인 경우 에러를 던져야 함', () => {
+    it('이미 입장한 유저 ID인 경우 정보를 업데이트하고 방을 반환해야 함', () => {
       service.addPlayerToRoom(roomId, {
         id: 1,
         nickname: 'User1',
@@ -148,15 +148,18 @@ describe('RoomsService', () => {
         deviceType: 'desktop' as DeviceType,
         isAi: false,
       });
-      expect(() => {
-        service.addPlayerToRoom(roomId, {
-          id: 1,
-          nickname: 'User1',
-          socketId: 's2',
-          deviceType: 'desktop' as DeviceType,
-          isAi: false,
-        });
-      }).toThrow('이미 방에 참가 중입니다.');
+
+      const updatedRoom = service.addPlayerToRoom(roomId, {
+        id: 1,
+        nickname: 'User1',
+        socketId: 's2', // 새로운 소켓 ID
+        deviceType: 'mobile' as DeviceType, // 새로운 기기 정보
+        isAi: false,
+      });
+
+      // 에러가 발생하지 않고, 정보가 업데이트되었는지 확인
+      expect(updatedRoom.players[0].socketId).toBe('s2');
+      expect(updatedRoom.players[0].deviceType).toBe('mobile');
     });
 
     it('팀 인원을 자동으로 균형 있게 배정해야 함', () => {
