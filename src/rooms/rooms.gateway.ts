@@ -74,6 +74,10 @@ export class RoomsGateway implements OnGatewayDisconnect {
       // 해당 방의 모든 유저에게 방 정보 업데이트 전송
       this.emitToRoom(roomId, 'roomUpdate', updatedRoom);
 
+      // (추가) 만약 게임이 진행 중이라면, 해당 유저의 소켓 ID를 게임 인스턴스에도 반영해야 함
+      // 그렇지 않으면 processMove 등에서 소켓 ID 불일치로 요청이 거부될 수 있음.
+      this.gameService.updateGamePlayerSocket(roomId, user.id, client.id);
+
       return { success: true, room: updatedRoom };
     } catch (error) {
       throw new WsException(error.message);

@@ -1,8 +1,9 @@
-import { Logger } from '@nestjs/common';
+import { Logger, UseInterceptors } from '@nestjs/common';
 import { ConnectedSocket, MessageBody, SubscribeMessage, WebSocketGateway, WebSocketServer } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
 
 import { GLOBAL_SOCKET_NAMESPACE, SOCKET_CORS_OPTIONS } from '@/common/constants/socket.constant';
+import { SocketLoggingInterceptor } from '@/common/interceptors/socket-logging.interceptor';
 import { GameAiService } from '@/game/ai/game-ai.service';
 import { GameInstance } from '@/game/game.interface';
 import { GameService } from '@/game/game.service';
@@ -11,6 +12,7 @@ import { GameService } from '@/game/game.service';
   namespace: GLOBAL_SOCKET_NAMESPACE,
   cors: SOCKET_CORS_OPTIONS,
 })
+@UseInterceptors(SocketLoggingInterceptor)
 export class GameGateway {
   @WebSocketServer()
   server: Server;

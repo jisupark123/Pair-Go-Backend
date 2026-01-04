@@ -65,6 +65,7 @@ describe('RoomsGateway', () => {
           useValue: {
             getGame: jest.fn(),
             createGame: jest.fn(),
+            updateGamePlayerSocket: jest.fn(),
           },
         },
       ],

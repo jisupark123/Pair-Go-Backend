@@ -140,4 +140,24 @@ export class GameService {
   endGame(roomId: string) {
     this.games.delete(roomId);
   }
+
+  updateGamePlayerSocket(roomId: string, userId: number, newSocketId: string) {
+    const game = this.games.get(roomId);
+    if (!game) return; // 진행 중인 게임이 없으면 무시
+
+    // teams 안에 있는 players 정보 업데이트
+    game.teams.forEach((team) => {
+      team.players.forEach((player) => {
+        if (player.data.id === userId) {
+          player.data.socketId = newSocketId;
+        }
+      });
+    });
+
+    // 전체 players 리스트도 업데이트 (참조용)
+    const playerInList = game.players.find((p) => p.id === userId);
+    if (playerInList) {
+      playerInList.socketId = newSocketId;
+    }
+  }
 }
