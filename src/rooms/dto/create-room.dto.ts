@@ -19,9 +19,9 @@ export class CreateRoomDto {
 
   @IsString()
   @IsNotEmpty()
-  countdownTime: string;
+  byoyomiTime: string;
 
   @IsString()
   @IsNotEmpty()
-  countdownCount: string;
+  byoyomiPeriods: string;
 }

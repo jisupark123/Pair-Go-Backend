@@ -1,5 +1,12 @@
 import { Logger, UseInterceptors } from '@nestjs/common';
-import { ConnectedSocket, MessageBody, SubscribeMessage, WebSocketGateway, WebSocketServer } from '@nestjs/websockets';
+import {
+  ConnectedSocket,
+  MessageBody,
+  OnGatewayInit,
+  SubscribeMessage,
+  WebSocketGateway,
+  WebSocketServer,
+} from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
 
 import { GLOBAL_SOCKET_NAMESPACE, SOCKET_CORS_OPTIONS } from '@/common/constants/socket.constant';
@@ -13,7 +20,7 @@ import { GameService } from '@/game/game.service';
   cors: SOCKET_CORS_OPTIONS,
 })
 @UseInterceptors(SocketLoggingInterceptor)
-export class GameGateway {
+export class GameGateway implements OnGatewayInit {
   @WebSocketServer()
   server: Server;
 
@@ -24,6 +31,10 @@ export class GameGateway {
     private readonly gameAiService: GameAiService,
   ) {}
 
+  afterInit(server: Server) {
+    this.gameService.bindServer(server);
+  }
+
   // 착수 (돌 놓기)
   @SubscribeMessage('playMove')
   async handleMove(
@@ -33,10 +44,16 @@ export class GameGateway {
     const updatedGame = this.gameService.processMove(payload.gameId, client.id, payload.y, payload.x);
 
     if (updatedGame) {
-      this.server.to(payload.gameId).emit('gameUpdate', this.gameService.serializeGame(updatedGame));
+      this.server.to(payload.gameId).emit('moveMade', this.gameService.serializeGame(updatedGame));
 
       await this.handleAiTurns(updatedGame);
     }
+  }
+
+  // 기권
+  @SubscribeMessage('resign')
+  handleResign(@ConnectedSocket() client: Socket, @MessageBody() payload: { gameId: string }) {
+    this.gameService.resign(payload.gameId, client.id);
   }
 
   public async handleAiTurns(game: GameInstance) {
@@ -81,7 +98,7 @@ export class GameGateway {
       currentGame = nextGame;
 
       // 5. Emit
-      this.server.to(currentGame.id).emit('gameUpdate', this.gameService.serializeGame(currentGame));
+      this.server.to(currentGame.id).emit('moveMade', this.gameService.serializeGame(currentGame));
     }
   }
 }

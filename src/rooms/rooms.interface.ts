@@ -23,8 +23,8 @@ export type Room = {
     komi: string; // 덤 (흑 기준)
     stoneColorMethod: 'auto' | 'manual'; // 자동돌가림, 방에서 선택
     basicTime: string; // 기본 시간
-    countdownTime: string; // 초읽기 시간
-    countdownCount: string; // 초읽기 횟수
+    byoyomiTime: string; // 초읽기 시간
+    byoyomiPeriods: string; // 초읽기 횟수
   };
   players: Player[];
   createdAt: Date;

@@ -98,7 +98,7 @@ describe('GameGateway', () => {
       // Then
       expect(gameService.processMove).toHaveBeenCalledWith(mockGameId, client.id, payload.y, payload.x);
       expect(server.to).toHaveBeenCalledWith(mockGameId);
-      expect(server.emit).toHaveBeenCalledWith('gameUpdate', expect.anything());
+      expect(server.emit).toHaveBeenCalledWith('moveMade', expect.anything());
     });
 
     it('잘못된 착수 요청(null 반환) 시 아무것도 하지 않아야 함', async () => {

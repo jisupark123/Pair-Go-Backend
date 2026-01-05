@@ -1,3 +1,4 @@
+export { type GameResult } from '@dodagames/go';
 import { Game, type StoneColor } from '@dodagames/go';
 
 import { TurnManager } from '@/game/turnManager';
@@ -6,8 +7,8 @@ import { Player, Room, Team } from '@/rooms/rooms.interface';
 /** 시간 제어 */
 export interface TimeControl {
   remainingBasicTimeMs: number; // 남은 기본 시간 (ms)
-  remainingCountdownTimeMs: number; // 초읽기 시간 (ms)
-  remainingCountdownCount: number; // 남은 초읽기 횟수
+  remainingByoyomiTimeMs: number; // 초읽기 시간 (ms)
+  remainingByoyomiPeriods: number; // 남은 초읽기 횟수
 }
 
 /** 게임 팀 */
@@ -41,6 +42,7 @@ export interface GameInstance {
   get currentTurn(): CurrentTurn; // 편의를 위한 게터
 
   startedAt: Date; // 게임 시작 시간
+  lastMoveTime: number; // 마지막 착수 시간 (시간 계산용)
   gameData: Game; // 대국 데이터
 }
 

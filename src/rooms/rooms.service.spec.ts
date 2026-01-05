@@ -41,8 +41,8 @@ describe('RoomsService', () => {
         komi: '6.5',
         stoneColorMethod: 'auto',
         basicTime: '30m',
-        countdownTime: '30s',
-        countdownCount: '3',
+        byoyomiTime: '30s',
+        byoyomiPeriods: '3',
       };
 
       const room = service.createRoom(hostId, dto);
@@ -372,8 +372,8 @@ describe('RoomsService', () => {
         komi: '6.5',
         stoneColorMethod: 'auto',
         basicTime: '30m',
-        countdownTime: '30s',
-        countdownCount: '3',
+        byoyomiTime: '30s',
+        byoyomiPeriods: '3',
       };
 
       const room = service.updateRoomSettings(roomId, hostId, newSettings);
